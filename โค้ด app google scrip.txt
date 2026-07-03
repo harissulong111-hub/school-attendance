@@ -1,0 +1,57 @@
+function doPost(e) {
+  try {
+    // 1. นำรหัส Channel Access Token จาก LINE Developer มาวางตรงนี้ครับ ⬇️
+    var channelAccessToken = "p0/ODIYQe601saB1r4Uk5XCw8iOLlN1zZGXL210b+B4+p3oUh1eVhgE5WVe55yr/zgkxNfSTclC08urjh4DCl0XZ6h2eS5WLyO4MllzolWPTI6cDOCLilKbKOwLdbRQs97FI3eXA38BN8cGZ8b2lHgdB04t89/1O/w1cDnyilFU="; 
+    
+    // 2. นำรหัส User ID หรือ Group ID ที่ต้องการให้บอทส่งข้อความไปหา มาวางตรงนี้ครับ ⬇️
+    var targetId = "Uf30e24472ca1084b5957023188a1ae4b";
+
+    var jsonString = e.postData.contents;
+    var data = JSON.parse(jsonString);
+    
+    // 3. ประกอบร่างข้อความรายงานประจำวัน
+    var messageText = "📊 รายงานสถิติการมาเรียนประจำวัน\n" +
+                      "📅 ประจำวันที่: " + data.date + "\n" +
+                      "👤 ครูผู้ดูแล: " + data.submittedBy + "\n";
+    
+    if(data.dailyNote) {
+      messageText += "📝 หมายเหตุ: " + data.dailyNote + "\n";
+    }
+    
+    messageText += "-------------------------\n" +
+                   "👥 นักเรียนทั้งหมด: " + data.summary.totalStudents + " คน\n" +
+                   "✅ มาเรียนวันนี้: " + data.summary.present + " คน (" + data.summary.percentage + "%)\n" +
+                   "❌ ขาดเรียน: " + data.summary.absent + " คน\n" +
+                   "🔶 ลาเรียน: " + data.summary.leave + " คน\n" +
+                   "⏰ มาสาย: " + data.summary.late + " คน\n" +
+                   "-------------------------";
+
+    // 4. ส่งคำขอไปยัง LINE Messaging API (ดัดแปลงโครงสร้าง Payload ใหม่)
+    var url = "https://api.line.me/v2/bot/message/push";
+    var payload = {
+      "to": targetId,
+      "messages": [{
+        "type": "text",
+        "text": messageText
+      }]
+    };
+    
+    var options = {
+      "method" : "post",
+      "headers": {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + channelAccessToken
+      },
+      "payload" : JSON.stringify(payload)
+    };
+    
+    UrlFetchApp.fetch(url, options);
+    
+    return ContentService.createTextOutput(JSON.stringify({"status": "success"}))
+                         .setMimeType(ContentService.MimeType.JSON);
+                         
+  } catch(err) {
+    return ContentService.createTextOutput(JSON.stringify({"status": "error", "message": err.toString()}))
+                         .setMimeType(ContentService.MimeType.JSON);
+  }
+}
