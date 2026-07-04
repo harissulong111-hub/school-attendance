@@ -204,8 +204,8 @@
                         <i class="fa-solid fa-graduation-cap text-lg"></i>
                     </div>
                     <div>
-                        <span class="font-extrabold text-xl bg-gradient-to-r from-slate-900 via-blue-600 to-emerald-500 dark:from-white dark:via-blue-400 dark:to-emerald-400 bg-clip-text text-transparent tracking-tight">ระบบจัดเก็บข้อมูลสถิติการมาเรียน 2569</span>
-                        <p class="text-[10px] text-slate-400 font-medium tracking-widest uppercase">โรงเรียนบ้านกาหยี สพป.ปัตตานี เขต 1</p>
+                        <span class="font-extrabold text-xl bg-gradient-to-r from-slate-900 via-blue-600 to-emerald-500 dark:from-white dark:via-blue-400 dark:to-emerald-400 bg-clip-text text-transparent tracking-tight">ข้อมูลสถิติการมาเรียน</span>
+                        <p class="text-[10px] text-slate-400 font-medium tracking-widest uppercase">Bankayee School</p>
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
@@ -299,6 +299,28 @@
             </div>
         </div>
 
+        <!-- 📊 เพิ่มเติม: ระบบดึงข้อมูลสรุปรายเดือนส่ง ผอ. (no-print เพื่อซ่อนเวลาพิมพ์รายงาน) -->
+        <div class="no-print bg-white dark:bg-premium-cardDark p-6 rounded-2xl border border-indigo-500/30 dark:border-indigo-500/20 shadow-premium-md mb-8">
+            <div class="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+                <div>
+                    <h4 class="text-base font-bold text-slate-800 dark:text-white flex items-center gap-2">
+                        <i class="fa-solid fa-file-invoice text-indigo-500"></i> ระบบประมวลผลรายงานสถิติรายเดือน 
+                    </h4>
+                    <p class="text-xs text-slate-400 mt-0.5">เลือกเดือนที่ต้องการ เพื่อดึงสถิติเฉลี่ยรวมและร้อยละการมาเรียนแยกรายชั้น</p>
+                </div>
+                
+                <div class="flex flex-wrap items-center gap-3 w-full md:w-auto">
+                    <!-- ช่องเลือกเดือน/ปี -->
+                    <input type="month" id="report-month" class="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl px-4 py-2.5 text-sm font-bold text-indigo-600 dark:text-indigo-400 outline-none focus:ring-2 focus:ring-indigo-500/30 cursor-pointer min-w-[160px]">
+                    
+                    <!-- ปุ่มดึงข้อมูลคณนา -->
+                    <button type="button" onclick="generateMonthlyReport()" class="px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl shadow-sm text-xs font-semibold flex items-center gap-2 transition-all">
+                        <i class="fa-solid fa-calculator"></i> ประมวลผลข้อมูลรายเดือน
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- ตารางบันทึกข้อมูลหลัก -->
         <div class="bg-white dark:bg-premium-cardDark rounded-2xl border border-slate-200/60 dark:border-slate-800/60 overflow-hidden shadow-premium-md transition-all duration-300">
             <div class="p-6 border-b border-slate-200/60 dark:border-slate-800/60 bg-slate-50/40 dark:bg-slate-900/40 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -337,14 +359,14 @@
             <!-- เมนูปุ่มกดด้านล่างหรูหรา -->
             <div class="p-6 bg-slate-50/40 dark:bg-slate-900/40 border-t border-slate-200/60 dark:border-slate-800/60 flex flex-col sm:flex-row justify-end gap-3">
                 <button type="button" onclick="clearAllAttendanceData()" class="no-print px-5 py-3 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 hover:border-rose-300 dark:bg-rose-950/20 dark:hover:bg-rose-950/40 dark:text-rose-400 dark:border-rose-900/50 font-semibold text-sm rounded-xl transition-all shadow-sm flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-trash-can-arrow-up text-xs"></i> ล้างข้อมูลเก่าเพื่อเริ่มใช้งานจริง
+                    <i class="fa-solid fa-trash-can-arrow-up text-xs"></i> ล้างข้อมูล
                 </button>
 
                 <button type="button" onclick="printReport()" class="px-5 py-3 bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 border border-slate-700/50 text-white font-medium text-sm rounded-xl transition-all shadow-sm flex items-center justify-center gap-2">
-                    <i class="fa-solid fa-print"></i> พิมพ์รายงานสรุป / เซฟ PDF
+                    <i class="fa-solid fa-print"></i> พิมพ์รายงานสรุป/PDF
                 </button>
                 <button onclick="saveAttendanceData()" class="px-6 py-3 bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-500 hover:from-blue-500 hover:to-emerald-400 text-white font-semibold text-sm rounded-xl shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center">
-                    <i class="fa-solid fa-cloud-arrow-up mr-2 text-xs"></i> อัปเดตข้อมูลขึ้นระบบคลาวด์พรีเมียม
+                    <i class="fa-solid fa-cloud-arrow-up mr-2 text-xs"></i> บันทึกข้อมูล
                 </button>
             </div>
         </div>
@@ -368,7 +390,7 @@
             const dateEl = document.getElementById('live-date');
             
             if(timeEl) timeEl.textContent = timeString;
-            if(dateEl) dateEl.textContent = "วัน" + dateString;
+            if(dateEl) dateEl.textContent = "📅" + dateString;
         }
         setInterval(updateLiveClock, 1000);
         updateLiveClock(); // รันทันทีเมื่อโหลดหน้าเว็บ
@@ -402,7 +424,6 @@
 
         // ฟังก์ชันช่วยสั่งงานไปยังแอปหลัก (app.js) เพื่อดึงข้อมูลสถิติมาแสดงผล
         function triggerLoadStatistics() {
-            // ดักเรียกฟังก์ชันที่มีแนวโน้มว่าจะอยู่ใน app.js เพื่อโหลดสถิติปัจจุบันของวันนั้นๆ
             if (typeof loadAttendanceData === 'function') {
                 loadAttendanceData();
             } else if (typeof fetchAttendanceData === 'function') {

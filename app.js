@@ -454,3 +454,93 @@ function clearAllAttendanceData() {
         }
     }
 }
+
+// =========================================================
+// 📊 9. เพิ่มเติม: ฟังก์ชันประมวลผลรายงานสถิติรายเดือน (เสนอ ผอ.)
+// =========================================================
+function generateMonthlyReport() {
+    const selectedMonth = document.getElementById('report-month').value;
+    if (!selectedMonth) {
+        return alert("⚠️ กรุณาเลือกเดือนและปีที่ต้องการประมวลผลก่อนครับ");
+    }
+
+    // แยกปีและเดือนออกมา (เช่น "2026-03" -> ปี 2026, เดือน 03)
+    const [year, month] = selectedMonth.split('-');
+    
+    // กำหนดวันเริ่มต้นและวันสิ้นสุดของเดือนเพื่อทำการ Query ช่วงข้อมูลจาก Firestore
+    const startDate = `${year}-${month}-01`;
+    const endDate = `${year}-${month}-31`; // Firestore เช็คค่า string range ครอบคลุมถึงสิ้นเดือนได้
+
+    alert(`🔍 กำลังดึงข้อมูลและคำนวณสถิติของเดือน ${month}/${year} กรุณารอสักครู่...`);
+
+    db.collection("attendance")
+        .where("date", ">=", startDate)
+        .where("date", "<=", endDate)
+        .get()
+        .then((querySnapshot) => {
+            if (querySnapshot.empty) {
+                alert(`❌ ไม่พบข้อมูลการบันทึกสถิติใดๆ ในเดือน ${month}/${year} บนระบบคลาวด์`);
+                return;
+            }
+
+            // ตัวแปรโครงสร้างสำหรับเก็บผลรวมเพื่อหาค่าเฉลี่ย
+            let totalDaysRecorded = querySnapshot.size;
+            let monthlyClassData = {};
+
+            // เตรียมโครงสร้างตั้งต้นสำหรับทุกชั้นเรียน
+            classesList.forEach(cls => {
+                monthlyClassData[cls] = { totalPresent: 0, totalAbsent: 0, totalLeave: 0, totalLate: 0 };
+            });
+
+            // วนลูปสะสมผลรวมสถิติจากทุกเอกสาร (ทุกวันที่บันทึก) ในเดือนนั้น
+            querySnapshot.forEach((doc) => {
+                const dayData = doc.data();
+                if (dayData.classes) {
+                    classesList.forEach((cls) => {
+                        if (dayData.classes[cls]) {
+                            monthlyClassData[cls].totalPresent += parseInt(dayData.classes[cls].present) || 0;
+                            monthlyClassData[cls].totalAbsent += parseInt(dayData.classes[cls].absent) || 0;
+                            monthlyClassData[cls].totalLeave += parseInt(dayData.classes[cls].leave) || 0;
+                            monthlyClassData[cls].totalLate += parseInt(dayData.classes[cls].late) || 0;
+                        }
+                    });
+                }
+            });
+
+            // นำค่าเฉลี่ยรายเดือนที่คณนาเสร็จแล้วไปสะท้อนผลลงบนตาราง (Table UI)
+            const rows = document.querySelectorAll('#table-body tr');
+            rows.forEach(row => {
+                const className = row.cells[0].innerText;
+                const classMonth = monthlyClassData[className];
+
+                if (classMonth) {
+                    // คำนวณค่าเฉลี่ยรายวัน (ปัดเศษทศนิยมให้สวยงาม)
+                    const avgPresent = (classMonth.totalPresent / totalDaysRecorded).toFixed(1);
+                    const avgAbsent = (classMonth.totalAbsent / totalDaysRecorded).toFixed(1);
+                    const avgLeave = (classMonth.totalLeave / totalDaysRecorded).toFixed(1);
+                    const avgLate = (classMonth.totalLate / totalDaysRecorded).toFixed(1);
+
+                    // ยัดค่าลงในช่อง Input เพื่อให้ครูเห็นตัวเลขเฉลี่ยภาพรวมรายเดือน
+                    row.querySelector('.present-input').value = avgPresent;
+                    row.querySelector('.absent-input').value = avgAbsent;
+                    row.querySelector('.leave-input').value = avgLeave;
+                    row.querySelector('.late-input').value = avgLate;
+                }
+            });
+
+            // อัปเดตการสะสมตัวเลขภาพรวมแดชบอร์ดและการวาดกราฟวงกลมประจำเดือน
+            updateCalculations();
+            
+            // อัปเดตข้อความช่องหมายเหตุระบุว่าเป็นรายงานรายเดือน
+            const dailyNoteInput = document.getElementById('daily-note');
+            if (dailyNoteInput) {
+                dailyNoteInput.value = `*** รายงานสถิติเฉลี่ยรายเดือน ประจำเดือน ${month}/${year} (คำนวณเฉลี่ยรวมจากข้อมูลทั้งหมด ${totalDaysRecorded} วันที่มีการบันทึก) ***`;
+            }
+
+            alert(`🎉 ประมวลผลสำเร็จ! ระบบได้คำนวณค่าเฉลี่ยสะสมตลอดทั้งเดือนรวม ${totalDaysRecorded} วันทำการเรียบร้อยแล้ว คุณครูสามารถสั่งพิมพ์รายงานเสนอ ผอ. ได้เลยครับ`);
+        })
+        .catch((error) => {
+            console.error("เกิดข้อผิดพลาดในการประมวลผลรายเดือน:", error);
+            alert("❌ ระบบขัดข้อง ไม่สามารถประมวลผลข้อมูลรายเดือนได้");
+        });
+}
