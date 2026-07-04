@@ -261,7 +261,7 @@ function saveAttendanceData() {
             alert(`🎉 สำเร็จ! บันทึกข้อมูลของวันที่ ${targetDate} โดยครูผู้ดูแล (${currentUserEmail}) เข้าสู่คลาวด์แล้ว\n🚀 ระบบกำลังส่งรายงานเข้า LINE Bot อัตโนมัติ...`);
             
             // 🌐 เชื่อมต่อสะพานข้อมูล Google Apps Script Webhook API ของคุณครู
-            const scriptUrl = "https://script.google.com/macros/s/AKfycbyJ9LmZvruMkNjX3uaHGStRtxVtN5K10VsDkdMadTWnoAUPnyxcM4jlzsFIPBUXCs2v/exec";
+            const scriptUrl = "https://script.google.com/macros/s/AKfycbxHY87ocDaoEm5rvqbotqKEb7AwS6MByJdvikHmbybi72Qv44beAPO0tErU_4nBl0w1/exec";
             
             return fetch(scriptUrl, {
                 method: 'POST',
