@@ -119,14 +119,27 @@ function renderTable() {
 
     document.querySelectorAll('#table-body input').forEach(input => {
         input.addEventListener('input', (e) => {
+            const row = e.target.closest('tr');
+            const male = parseInt(row.querySelector('.male-input').value) || 0;
+            const female = parseInt(row.querySelector('.female-input').value) || 0;
+            const total = male + female;
+
+            // ✨ ปรับปรุงเงื่อนไขช่อง "มาเรียนวันนี้" เมื่อถูกลบค่า
+            if (e.target.classList.contains('present-input')) {
+                const presentVal = e.target.value;
+                if (presentVal !== "") {
+                    const present = parseInt(presentVal) || 0;
+                    let calculatedAbsent = total - present;
+                    row.querySelector('.absent-input').value = calculatedAbsent < 0 ? 0 : calculatedAbsent;
+                } else {
+                    // 🛠️ ส่วนที่แก้ไข: เมื่อลบค่าในช่องมาเรียนวันนี้ ให้ลบค่าในช่องขาดเรียน (ให้เป็นค่าว่าง) ไปด้วย
+                    row.querySelector('.absent-input').value = "";
+                }
+            }
+
             if (e.target.classList.contains('absent-input') || e.target.classList.contains('leave-input')) {
-                const row = e.target.closest('tr');
-                const male = parseInt(row.querySelector('.male-input').value) || 0;
-                const female = parseInt(row.querySelector('.female-input').value) || 0;
                 const absent = parseInt(row.querySelector('.absent-input').value) || 0;
                 const leave = parseInt(row.querySelector('.leave-input').value) || 0;
-                
-                const total = male + female;
                 const currentPresent = row.querySelector('.present-input').value;
 
                 if (currentPresent !== "") {
@@ -467,9 +480,9 @@ function generateMonthlyReport() {
     // แยกปีและเดือนออกมา (เช่น "2026-03" -> ปี 2026, เดือน 03)
     const [year, month] = selectedMonth.split('-');
     
-    // กำหนดวันเริ่มต้นและวันสิ้นสุดของเดือนเพื่อทำการ Query ช่วงข้อมูลจาก Firestore
+    // 定義 Firestore query range
     const startDate = `${year}-${month}-01`;
-    const endDate = `${year}-${month}-31`; // Firestore เช็คค่า string range ครอบคลุมถึงสิ้นเดือนได้
+    const endDate = `${year}-${month}-31`; 
 
     alert(`🔍 กำลังดึงข้อมูลและคำนวณสถิติของเดือน ${month}/${year} กรุณารอสักครู่...`);
 
