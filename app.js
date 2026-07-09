@@ -557,3 +557,162 @@ function generateMonthlyReport() {
             alert("❌ ระบบขัดข้อง ไม่สามารถประมวลผลข้อมูลรายเดือนได้");
         });
 }
+
+// =========================================================
+// 📊 10. เพิ่มเติม: ฟังก์ชันส่งออกสถิติเฉลี่ยรายเดือนเป็นไฟล์ Excel (.xls)
+// =========================================================
+function exportMonthlyToExcel() {
+    const selectedMonth = document.getElementById('report-month').value;
+    if (!selectedMonth) {
+        return alert("⚠️ กรุณาเลือกเดือนและปีที่ต้องการส่งออกไฟล์ Excel ก่อนครับ");
+    }
+
+    const [year, month] = selectedMonth.split('-');
+    const startDate = `${year}-${month}-01`;
+    const endDate = `${year}-${month}-31`;
+
+    alert(`📊 กำลังดึงข้อมูลระบบคลาวด์เพื่อจัดทำไฟล์ Excel ของเดือน ${month}/${year}...`);
+
+    db.collection("attendance")
+        .where("date", ">=", startDate)
+        .where("date", "<=", endDate)
+        .get()
+        .then((querySnapshot) => {
+            if (querySnapshot.empty) {
+                return alert(`❌ ไม่พบข้อมูลสถิติในเดือน ${month}/${year} บนฐานข้อมูลคลาวด์ จึงไม่สามารถสร้างไฟล์ Excel ได้`);
+            }
+
+            let totalDaysRecorded = querySnapshot.size;
+            let monthlyClassData = {};
+
+            classesList.forEach(cls => {
+                monthlyClassData[cls] = { totalPresent: 0, totalAbsent: 0, totalLeave: 0, totalLate: 0 };
+            });
+
+            querySnapshot.forEach((doc) => {
+                const dayData = doc.data();
+                if (dayData.classes) {
+                    classesList.forEach((cls) => {
+                        if (dayData.classes[cls]) {
+                            monthlyClassData[cls].totalPresent += parseInt(dayData.classes[cls].present) || 0;
+                            monthlyClassData[cls].totalAbsent += parseInt(dayData.classes[cls].absent) || 0;
+                            monthlyClassData[cls].totalLeave += parseInt(dayData.classes[cls].leave) || 0;
+                            monthlyClassData[cls].totalLate += parseInt(dayData.classes[cls].late) || 0;
+                        }
+                    });
+                }
+            });
+
+            // 📝 เริ่มสร้างโครงสร้างตาราง HTML สำหรับแปลงร่างเป็น Excel (ฝัง CSS สไตล์เล่มรายงาน)
+            let excelTemplate = `
+                <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
+                <head>
+                <meta charset="utf-8">
+                <style>
+                    body { font-family: 'Aptos', 'Cordia New', sans-serif; }
+                    .title { font-size: 16px; font-weight: bold; text-align: center; height: 35px; }
+                    .subtitle { font-size: 12px; text-align: center; height: 25px; color: #555; }
+                    table { border-collapse: collapse; }
+                    th { background-color: #10b981; color: white; border: 0.5pt solid #000; text-align: center; font-weight: bold; height: 30px; }
+                    td { border: 0.5pt solid #000; text-align: center; height: 25px; }
+                    .class-name { font-weight: bold; background-color: #f8fafc; }
+                    .summary-row { background-color: #e2e8f0; font-weight: bold; }
+                    .percent-col { font-weight: bold; color: #10b981; }
+                </style>
+                </head>
+                <body>
+                <table>
+                    <tr><td colspan="8" class="title">รายงานสรุปสถิติการมาเรียนเฉลี่ยรายเดือน (ภาพรวมระดับโรงเรียน)</td></tr>
+                    <tr><td colspan="8" class="subtitle">ประจำเดือน: ${month}/${year} | จำนวนวันทำการที่มีการบันทึก: ${totalDaysRecorded} วัน</td></tr>
+                    <tr><td></td></tr>
+                    <tr>
+                        <th>ระดับชั้น</th>
+                        <th>นักเรียนชาย</th>
+                        <th>นักเรียนหญิง</th>
+                        <th>มาเรียนวันนี้ (เฉลี่ย)</th>
+                        <th>ขาดเรียน (เฉลี่ย)</th>
+                        <th>ลาเรียน (เฉลี่ย)</th>
+                        <th>มาสาย (เฉลี่ย)</th>
+                        <th>เปอร์เซ็นต์มาเรียน</th>
+                    </tr>
+            `;
+
+            let grandTotalStudents = 0;
+            let grandPresentAvgSum = 0;
+            let grandAbsentAvgSum = 0;
+            let grandLeaveAvgSum = 0;
+            let grandLateAvgSum = 0;
+
+            // วนลูปคัดลอกข้อมูลเฉลี่ยรายวันใส่ลงแถวตาราง Excel
+            classesList.forEach(cls => {
+                const defaultData = defaultStudentsData[cls] || { male: 0, female: 0 };
+                const totalClass = defaultData.male + defaultData.female;
+                const classMonth = monthlyClassData[cls];
+
+                const avgPresent = parseFloat((classMonth.totalPresent / totalDaysRecorded).toFixed(1));
+                const avgAbsent = parseFloat((classMonth.totalAbsent / totalDaysRecorded).toFixed(1));
+                const avgLeave = parseFloat((classMonth.totalLeave / totalDaysRecorded).toFixed(1));
+                const avgLate = parseFloat((classMonth.totalLate / totalDaysRecorded).toFixed(1));
+                const classPercent = totalClass > 0 ? ((classMonth.totalPresent / (totalClass * totalDaysRecorded)) * 100).toFixed(2) : "0.00";
+
+                grandTotalStudents += totalClass;
+                grandPresentAvgSum += avgPresent;
+                grandAbsentAvgSum += avgAbsent;
+                grandLeaveAvgSum += avgLeave;
+                grandLateAvgSum += avgLate;
+
+                excelTemplate += `
+                    <tr>
+                        <td class="class-name">${cls}</td>
+                        <td>${defaultData.male}</td>
+                        <td>${defaultData.female}</td>
+                        <td>${avgPresent}</td>
+                        <td>${avgAbsent}</td>
+                        <td>${avgLeave}</td>
+                        <td>${avgLate}</td>
+                        <td class="percent-col">${classPercent}%</td>
+                    </tr>
+                `;
+            });
+
+            // คำนวณเปอร์เซ็นต์รวมปิดท้ายเล่มรายงาน
+            const totalPercentage = grandTotalStudents > 0 ? ((grandPresentAvgSum / grandTotalStudents) * 100).toFixed(2) : "0.00";
+
+            // สรุปยอดรวม (Grand Summary) ท้ายตาราง
+            excelTemplate += `
+                    <tr class="summary-row">
+                        <td>รวมภาพรวม</td>
+                        <td colspan="2">${grandTotalStudents} คน (นร.ทั้งหมด)</td>
+                        <td>${grandPresentAvgSum.toFixed(1)}</td>
+                        <td>${grandAbsentAvgSum.toFixed(1)}</td>
+                        <td>${grandLeaveAvgSum.toFixed(1)}</td>
+                        <td>${grandLateAvgSum.toFixed(1)}</td>
+                        <td style="color: #059669;">${totalPercentage}%</td>
+                    </tr>
+                </table>
+                </body>
+                </html>
+            `;
+
+            // 💾 กระบวนการทำ Data Stream ดาวน์โหลดไฟล์ออกไปนอกระบบคอมพิวเตอร์
+            const blob = new Blob([excelTemplate], { type: "application/vnd.ms-excel;charset=utf-8;" });
+            const link = document.createElement("a");
+            const fileName = `รายงานสถิติมาเรียน_${month}_${year}.xls`;
+
+            if (navigator.msSaveBlob) { 
+                navigator.msSaveBlob(blob, fileName);
+            } else {
+                link.href = URL.createObjectURL(blob);
+                link.style.visibility = 'hidden';
+                link.download = fileName;
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+            }
+            console.log(`🟢 สั่งเจาะไฟล์และส่งออกสเปรดชีต Excel สำเร็จ: ${fileName}`);
+        })
+        .catch((error) => {
+            console.error("Excel Export Error:", error);
+            alert("❌ ระบบขัดข้อง ไม่สามารถดึงฐานข้อมูลเพื่อส่งออกไฟล์ Excel ได้");
+        });
+}
