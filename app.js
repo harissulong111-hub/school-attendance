@@ -499,7 +499,7 @@ function exportMonthlyReportToExcel() {
                 </style>
                 </head>
                 <body>
-                <div class="header-title">รายงานสรุปข้อมูลสถิติการมาเรียน โรงเรียนบ้านกาเยาะ ประจำเดือน ค.ศ. ${month}/${year}</div>
+                <div class="header-title">รายงานสรุปข้อมูลสถิติการมาเรียน โรงเรียนบ้านกาหยี ประจำเดือน  ${month}/${year}</div>
                 <table>
                     <tr>
                         <th style="width: 140px;">วันที่บันทึก</th>
