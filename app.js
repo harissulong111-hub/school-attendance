@@ -103,12 +103,15 @@ function renderTable() {
 
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-50/50 dark:hover:bg-slate-700/30 transition-colors';
-        // 🔒 เติม readonly และเปลี่ยนสไตล์ชั่วคราวให้ดูเหมือนข้อความธรรมดา เพื่อล็อกไม่ให้แก้ไขได้
+        
+        // 🛠️ ส่วนปรับปรุง: เพิ่มช่อง male-present และ female-present (มีค่าว่าง) และให้ช่อง present-input คำนวณบวกรวมอัตโนมัติ (readonly)
         tr.innerHTML = `
             <td class="p-4 font-bold text-slate-700 dark:text-slate-200">${cls}</td>
             <td class="p-4"><input type="number" value="${defaultData.male}" readonly class="w-16 bg-transparent text-center outline-none font-medium text-slate-500 dark:text-slate-400 cursor-not-allowed male-input"></td>
             <td class="p-4"><input type="number" value="${defaultData.female}" readonly class="w-16 bg-transparent text-center outline-none font-medium text-slate-500 dark:text-slate-400 cursor-not-allowed female-input"></td>
-            <td class="p-4"><input type="number" value="" placeholder="ว่าง" class="w-16 bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 rounded text-center font-bold present-input"></td>
+            <td class="p-4"><input type="number" value="" placeholder="ว่าง" class="w-16 bg-blue-500/10 text-blue-500 border border-blue-500/30 rounded text-center font-bold male-present-input"></td>
+            <td class="p-4"><input type="number" value="" placeholder="ว่าง" class="w-16 bg-pink-500/10 text-pink-500 border border-pink-500/30 rounded text-center font-bold female-present-input"></td>
+            <td class="p-4"><input type="number" value="" placeholder="0" readonly class="w-16 bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 rounded text-center font-bold present-input cursor-not-allowed"></td>
             <td class="p-4"><input type="number" value="0" class="w-16 bg-rose-500/10 text-rose-500 border border-rose-500/30 rounded text-center absent-input"></td>
             <td class="p-4"><input type="number" value="0" class="w-16 bg-amber-500/10 text-amber-500 border border-amber-500/30 rounded text-center leave-input"></td>
             <td class="p-4"><input type="number" value="0" class="w-16 bg-blue-500/10 text-blue-500 border border-blue-500/30 rounded text-center late-input"></td>
@@ -124,17 +127,19 @@ function renderTable() {
             const female = parseInt(row.querySelector('.female-input').value) || 0;
             const total = male + female;
 
-            // ✨ ปรับปรุงเงื่อนไขช่อง "มาเรียนวันนี้" เมื่อถูกลบค่า
-            if (e.target.classList.contains('present-input')) {
-                const presentVal = e.target.value;
-                if (presentVal !== "") {
-                    const present = parseInt(presentVal) || 0;
-                    let calculatedAbsent = total - present;
-                    row.querySelector('.absent-input').value = calculatedAbsent < 0 ? 0 : calculatedAbsent;
-                } else {
-                    // 🛠️ ส่วนที่แก้ไข: เมื่อลบค่าในช่องมาเรียนวันนี้ ให้ลบค่าในช่องขาดเรียน (ให้เป็นค่าว่าง) ไปด้วย
-                    row.querySelector('.absent-input').value = "";
-                }
+            // 🛠️ ส่วนปรับปรุงคำนวณอัตโนมัติ: ดึงยอดจาก ชายมา และ หญิงมา ไปใส่ให้ช่องรวมรวมนักเรียนมาวันนี้
+            const malePresent = row.querySelector('.male-present-input').value !== "" ? parseInt(row.querySelector('.male-present-input').value) || 0 : null;
+            const femalePresent = row.querySelector('.female-present-input').value !== "" ? parseInt(row.querySelector('.female-present-input').value) || 0 : null;
+            
+            if (malePresent !== null || femalePresent !== null) {
+                const calculatedSum = (malePresent || 0) + (femalePresent || 0);
+                row.querySelector('.present-input').value = calculatedSum;
+                
+                let calculatedAbsent = total - calculatedSum;
+                row.querySelector('.absent-input').value = calculatedAbsent < 0 ? 0 : calculatedAbsent;
+            } else {
+                row.querySelector('.present-input').value = "";
+                row.querySelector('.absent-input').value = "";
             }
 
             if (e.target.classList.contains('absent-input') || e.target.classList.contains('leave-input')) {
@@ -160,6 +165,9 @@ function fillAllPresent() {
         const male = parseInt(row.querySelector('.male-input').value) || 0;
         const female = parseInt(row.querySelector('.female-input').value) || 0;
         
+        // 🛠️ ส่วนปรับปรุง: เมื่อกดปุ่มมาครบ ให้กระจายลงช่องชายมา-หญิงมาตามยอดทั้งหมดให้ด้วย
+        row.querySelector('.male-present-input').value = male;
+        row.querySelector('.female-present-input').value = female;
         row.querySelector('.present-input').value = male + female;
         row.querySelector('.absent-input').value = 0;
         row.querySelector('.leave-input').value = 0;
@@ -246,6 +254,11 @@ function saveAttendanceData() {
         const className = row.cells[0].innerText;
         const male = parseInt(row.querySelector('.male-input').value) || 0;
         const female = parseInt(row.querySelector('.female-input').value) || 0;
+        
+        // 🛠️ ส่วนปรับปรุง payload: ดึงค่าชายมา-หญิงมาเพิ่มเข้าไปในก้อนชุดข้อมูลเก็บลงคลาวด์
+        const malePresent = row.querySelector('.male-present-input').value !== "" ? parseInt(row.querySelector('.male-present-input').value) || 0 : "";
+        const femalePresent = row.querySelector('.female-present-input').value !== "" ? parseInt(row.querySelector('.female-present-input').value) || 0 : "";
+        
         const p = parseInt(row.querySelector('.present-input').value) || 0;
         const ab = parseInt(row.querySelector('.absent-input').value) || 0;
         const lv = parseInt(row.querySelector('.leave-input').value) || 0;
@@ -257,7 +270,16 @@ function saveAttendanceData() {
         leave += lv;
         late += lt;
 
-        attendancePayload.classes[className] = { male, female, present: p, absent: ab, leave: lv, late: lt };
+        attendancePayload.classes[className] = { 
+            male, 
+            female, 
+            malePresent, 
+            femalePresent, 
+            present: p, 
+            absent: ab, 
+            leave: lv, 
+            late: lt 
+        };
     });
 
     attendancePayload.summary = {
@@ -292,6 +314,7 @@ function saveAttendanceData() {
         });
 }
 
+// ระบบสลับธีม Dark Mode / Light Mode
 function toggleDarkMode() {
     const isDark = document.documentElement.classList.toggle('dark');
     document.getElementById('theme-icon').className = isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
@@ -307,11 +330,10 @@ function loadAttendanceData() {
     db.collection("attendance").doc(targetDate).get()
         .then((doc) => {
             const dailyNoteInput = document.getElementById('daily-note');
-            
             if (doc.exists) {
                 const savedData = doc.data();
                 console.log(`📥 เจอข้อมูลเก่าของวันที่ ${targetDate}:`, savedData);
-
+                
                 // แสดงข้อความหมายเหตุที่บันทึกไว้คืนมาที่ฟิลด์อินพุต
                 if (dailyNoteInput) {
                     dailyNoteInput.value = savedData.dailyNote || '';
@@ -319,37 +341,39 @@ function loadAttendanceData() {
 
                 const rows = document.querySelectorAll('#table-body tr');
                 rows.forEach(row => {
-                    const className = row.cells[0].innerText; 
+                    const className = row.cells[0].innerText;
                     const classData = savedData.classes ? savedData.classes[className] : null;
-
                     if (classData) {
+                        // 🛠 *ส่วนที่แก้ไขเพิ่มเติม*: ดึงค่า ชายมา-หญิงมา กลับมาแสดงผลคืนบนตารางกรณีมีข้อมูลเก่า
                         row.querySelector('.male-input').value = classData.male;
                         row.querySelector('.female-input').value = classData.female;
+                        row.querySelector('.male-present-input').value = (classData.malePresent !== undefined) ? classData.malePresent : "";
+                        row.querySelector('.female-present-input').value = (classData.femalePresent !== undefined) ? classData.femalePresent : "";
                         row.querySelector('.present-input').value = classData.present;
                         row.querySelector('.absent-input').value = classData.absent;
                         row.querySelector('.leave-input').value = classData.leave;
                         row.querySelector('.late-input').value = classData.late;
                     }
                 });
-
             } else {
                 // หากไม่เจอข้อมูลเดิมของวันนั้นๆ ให้เคลียร์ข้อมูลเป็นค่าดีฟอลต์ทั้งหมด
                 if (dailyNoteInput) dailyNoteInput.value = '';
-
                 const rows = document.querySelectorAll('#table-body tr');
                 rows.forEach(row => {
                     const className = row.cells[0].innerText;
                     const defaultData = defaultStudentsData[className] || { male: 0, female: 0 };
-
                     row.querySelector('.male-input').value = defaultData.male;
                     row.querySelector('.female-input').value = defaultData.female;
-                    row.querySelector('.present-input').value = ""; 
+                    
+                    // เคลียร์ค่าว่างในฟิลด์บันทึกมาเรียนชุดใหม่
+                    row.querySelector('.male-present-input').value = "";
+                    row.querySelector('.female-present-input').value = "";
+                    row.querySelector('.present-input').value = "";
                     row.querySelector('.absent-input').value = 0;
                     row.querySelector('.leave-input').value = 0;
                     row.querySelector('.late-input').value = 0;
                 });
             }
-
             updateCalculations();
         })
         .catch((error) => {
@@ -368,27 +392,36 @@ function printReport() {
 function updatePieChart(present, absent, leave, late) {
     const canvasElement = document.getElementById('attendanceChart');
     if (!canvasElement) return;
+
     const ctx = canvasElement.getContext('2d');
+    const chartData = [present, absent, leave, late];
     
-    const total = present + absent + leave + late;
-    const chartData = total === 0 ? [1, 0, 0, 0] : [present, absent, leave, late];
-    const chartLabels = total === 0 ? ['ไม่มีข้อมูล'] : ['มาเรียน', 'ขาดเรียน', 'ลาเรียน', 'มาสาย'];
-    const chartColors = total === 0 ? ['#94a3b8'] : ['#10b981', '#f43f5e', '#f59e0b', '#38bdf8'];
+    // ตรวจสอบความพร้อม หากมียอดรวมเป็น 0 ให้สร้างสัดส่วนจำลองเพื่อป้องกัน Chart.js Error หน้าจอค้าง
+    const totalSignals = present + absent + leave + late;
 
     if (attendancePieChart) {
-        attendancePieChart.data.labels = chartLabels;
-        attendancePieChart.data.datasets[0].data = chartData;
-        attendancePieChart.data.datasets[0].backgroundColor = chartColors;
+        // หากเคยอินิทกราฟไว้แล้ว ให้สลับชุดตัวเลขเพื่อแอนิเมชันที่สวยงาม
+        attendancePieChart.data.datasets[0].data = totalSignals === 0 ? [1, 0, 0, 0] : chartData;
         attendancePieChart.update();
     } else {
+        // ขั้นตอนการสร้าง Instance ใหม่ลงบน Context Canvas ครั้งแรก
         attendancePieChart = new Chart(ctx, {
-            type: 'doughnut',
+            type: 'pie',
             data: {
-                labels: chartLabels,
+                labels: ['มาเรียนจริง (คน)', 'ขาดเรียน (คน)', 'ลาเรียน (คน)', 'มาสาย (คน)'],
                 datasets: [{
-                    data: chartData,
-                    backgroundColor: chartColors,
-                    borderWidth: 0
+                    data: totalSignals === 0 ? [1, 0, 0, 0] : chartData,
+                    backgroundColor: [
+                        'rgba(16, 185, 129, 0.85)', // Emerald 500
+                        'rgba(239, 68, 68, 0.85)',   // Rose 500
+                        'rgba(245, 158, 11, 0.85)',  // Amber 500
+                        'rgba(59, 130, 246, 0.85)'   // Blue 500
+                    ],
+                    borderColor: [
+                        '#10b981', '#ef4444', '#f59e0b', '#3b82f6'
+                    ],
+                    borderWidth: 2,
+                    hoverOffset: 12
                 }]
             },
             options: {
@@ -398,296 +431,135 @@ function updatePieChart(present, absent, leave, late) {
                     legend: {
                         position: 'bottom',
                         labels: {
-                            boxWidth: 12,
-                            font: { family: 'sans-serif', size: 11 },
-                            color: document.documentElement.classList.contains('dark') ? '#cbd5e1' : '#334155'
+                            font: { family: 'Noto Sans Thai', size: 12, weight: '500' },
+                            padding: 18,
+                            usePointStyle: true,
+                            pointStyle: 'circle'
                         }
                     },
                     tooltip: {
                         callbacks: {
                             label: function(context) {
-                                let val = context.raw || 0;
-                                return ` ${context.label}: ${val} คน`;
+                                if (totalSignals === 0 && context.dataIndex === 0) {
+                                    return " ไม่มีข้อมูลจัดเก็บประจำวันนี้";
+                                }
+                                return ` จำนวน: ${context.raw} คน`;
                             }
                         }
                     }
-                },
-                cutout: '70%'
+                }
             }
         });
     }
 }
 
-// ลงทะเบียน Event Listeners ของระบบหน้าบ้าน
-document.getElementById('record-date').addEventListener('change', loadAttendanceData);
-
-// รันฟังก์ชันวาดระบบครั้งแรก
-renderTable();
-
 // =========================================================
-// ⚠️ 8. ฟังก์ชันพิเศษ: ล้างข้อมูลเก่าในคลาวด์เพื่อเริ่มใช้งานจริง
+// 🚀 8. ฟังก์ชันประมวลผลดึงดาต้าเบสเพื่อแปลงส่งออกเป็นสเปรดชีต Excel รายเดือน (.xls)
 // =========================================================
-function clearAllAttendanceData() {
-    if (!currentUserEmail) {
-        return alert("❌ ปฏิเสธการทำงาน: สิทธิ์เข้าใช้งานระบบถูกบล็อก กรุณาล็อกอินก่อนดำเนินการใดๆ");
-    }
+function exportMonthlyReportToExcel() {
+    const targetDate = document.getElementById('record-date').value;
+    if (!targetDate) return alert("❌ ไม่สามารถประมวลผลได้: กรุณาเลือกวันที่บนปฏิทินเพื่อระบุเดือนที่ต้องการส่งออก");
 
-    const firstConfirm = confirm("⚠️ คุณแน่ใจใช่ไหมว่าต้องการ 'ลบข้อมูลสถิติทั้งหมด' ที่เคยบันทึกไว้ในฐานข้อมูลคลาวด์? \n\n(การกระทำนี้จะไม่สามารถย้อนคืนได้ ข้อมูลการทดสอบทั้งหมดจะหายไป)");
-    
-    if (firstConfirm) {
-        const finalCheck = prompt("🔒 ระบบความปลอดภัยขั้นสูง:\nกรุณาพิมพ์คำว่า 'DELETE' (ตัวพิมพ์ใหญ่ทั้งหมด) เพื่อยืนยันการล้างฐานข้อมูลระบบ:");
-        
-        if (finalCheck === "DELETE") {
-            alert("🚀 กำลังเชื่อมต่อคลาวด์เพื่อสั่งล้างฐานข้อมูลโปรดรอสักครู่...");
-            
-            db.collection("attendance").get()
-                .then((querySnapshot) => {
-                    if (querySnapshot.empty) {
-                        alert("✨ ฐานข้อมูลว่างเปล่าอยู่แล้ว ไม่มีข้อมูลเก่าค้างในระบบครับ");
-                        return;
-                    }
+    const dateParts = targetDate.split('-');
+    const year = dateParts[0];
+    const month = dateParts[1]; 
 
-                    const batch = db.batch();
-                    querySnapshot.forEach((doc) => {
-                        batch.delete(doc.ref);
-                    });
-
-                    return batch.commit();
-                })
-                .then(() => {
-                    alert("🎉 สำเร็จ! ล้างข้อมูลสถิติเก่าออกจากระบบเรียบร้อยแล้ว ตอนนี้ฐานข้อมูลสะอาด 100% พร้อมเริ่มใช้งานจริงแล้วครับ");
-                    window.location.reload();
-                })
-                .catch((error) => {
-                    console.error("เกิดข้อผิดพลาดในการล้างข้อมูล:", error);
-                    alert("❌ เกิดข้อผิดพลาด! ไม่สามารถลบข้อมูลได้เนื่องจากติดปัญหา Security Rules บนคลาวด์");
-                });
-        } else {
-            alert("❌ ยกเลิกภารกิจ: คุณพิมพ์คำยืนยันไม่ถูกต้อง ระบบจึงล็อกไม่ให้เกิดการลบข้อมูลครับ");
-        }
-    }
-}
-
-// =========================================================
-// 📊 9. เพิ่มเติม: ฟังก์ชันประมวลผลรายงานสถิติรายเดือน (เสนอ ผอ.)
-// =========================================================
-function generateMonthlyReport() {
-    const selectedMonth = document.getElementById('report-month').value;
-    if (!selectedMonth) {
-        return alert("⚠️ กรุณาเลือกเดือนและปีที่ต้องการประมวลผลก่อนครับ");
-    }
-
-    // แยกปีและเดือนออกมา (เช่น "2026-03" -> ปี 2026, เดือน 03)
-    const [year, month] = selectedMonth.split('-');
-    
-    // 定義 Firestore query range
-    const startDate = `${year}-${month}-01`;
-    const endDate = `${year}-${month}-31`; 
-
-    alert(`🔍 กำลังดึงข้อมูลและคำนวณสถิติของเดือน ${month}/${year} กรุณารอสักครู่...`);
+    const startOfMonth = `${year}-${month}-01`;
+    const endOfMonth = `${year}-${month}-31`; 
 
     db.collection("attendance")
-        .where("date", ">=", startDate)
-        .where("date", "<=", endDate)
+        .where("date", ">=", startOfMonth)
+        .where("date", "<=", endOfMonth)
         .get()
         .then((querySnapshot) => {
             if (querySnapshot.empty) {
-                alert(`❌ ไม่พบข้อมูลการบันทึกสถิติใดๆ ในเดือน ${month}/${year} บนระบบคลาวด์`);
-                return;
+                return alert(`📭 ไม่พบฐานข้อมูลสถิติมาเรียนใดๆ ในช่วงเดือน ${month}/${year} บนระบบคลาวด์ครับ`);
             }
 
-            // ตัวแปรโครงสร้างสำหรับเก็บผลรวมเพื่อหาค่าเฉลี่ย
-            let totalDaysRecorded = querySnapshot.size;
-            let monthlyClassData = {};
-
-            // เตรียมโครงสร้างตั้งต้นสำหรับทุกชั้นเรียน
-            classesList.forEach(cls => {
-                monthlyClassData[cls] = { totalPresent: 0, totalAbsent: 0, totalLeave: 0, totalLate: 0 };
-            });
-
-            // วนลูปสะสมผลรวมสถิติจากทุกเอกสาร (ทุกวันที่บันทึก) ในเดือนนั้น
+            let monthlyRecords = [];
             querySnapshot.forEach((doc) => {
-                const dayData = doc.data();
-                if (dayData.classes) {
-                    classesList.forEach((cls) => {
-                        if (dayData.classes[cls]) {
-                            monthlyClassData[cls].totalPresent += parseInt(dayData.classes[cls].present) || 0;
-                            monthlyClassData[cls].totalAbsent += parseInt(dayData.classes[cls].absent) || 0;
-                            monthlyClassData[cls].totalLeave += parseInt(dayData.classes[cls].leave) || 0;
-                            monthlyClassData[cls].totalLate += parseInt(dayData.classes[cls].late) || 0;
-                        }
-                    });
-                }
+                monthlyRecords.push(doc.data());
             });
 
-            // นำค่าเฉลี่ยรายเดือนที่คณนาเสร็จแล้วไปสะท้อนผลลงบนตาราง (Table UI)
-            const rows = document.querySelectorAll('#table-body tr');
-            rows.forEach(row => {
-                const className = row.cells[0].innerText;
-                const classMonth = monthlyClassData[className];
+            // จัดเรียงวันที่จากน้อยไปมาก
+            monthlyRecords.sort((a, b) => a.date.localeCompare(b.date));
 
-                if (classMonth) {
-                    // คำนวณค่าเฉลี่ยรายวัน (ปัดเศษทศนิยมให้สวยงาม)
-                    const avgPresent = (classMonth.totalPresent / totalDaysRecorded).toFixed(1);
-                    const avgAbsent = (classMonth.totalAbsent / totalDaysRecorded).toFixed(1);
-                    const avgLeave = (classMonth.totalLeave / totalDaysRecorded).toFixed(1);
-                    const avgLate = (classMonth.totalLate / totalDaysRecorded).toFixed(1);
-
-                    // ยัดค่าลงในช่อง Input เพื่อให้ครูเห็นตัวเลขเฉลี่ยภาพรวมรายเดือน
-                    row.querySelector('.present-input').value = avgPresent;
-                    row.querySelector('.absent-input').value = avgAbsent;
-                    row.querySelector('.leave-input').value = avgLeave;
-                    row.querySelector('.late-input').value = avgLate;
-                }
-            });
-
-            // อัปเดตการสะสมตัวเลขภาพรวมแดชบอร์ดและการวาดกราฟวงกลมประจำเดือน
-            updateCalculations();
-            
-            // อัปเดตข้อความช่องหมายเหตุระบุว่าเป็นรายงานรายเดือน
-            const dailyNoteInput = document.getElementById('daily-note');
-            if (dailyNoteInput) {
-                dailyNoteInput.value = `*** รายงานสถิติเฉลี่ยรายเดือน ประจำเดือน ${month}/${year} (คำนวณเฉลี่ยรวมจากข้อมูลทั้งหมด ${totalDaysRecorded} วันที่มีการบันทึก) ***`;
-            }
-
-            alert(`🎉 ประมวลผลสำเร็จ! ระบบได้คำนวณค่าเฉลี่ยสะสมตลอดทั้งเดือนรวม ${totalDaysRecorded} วันทำการเรียบร้อยแล้ว คุณครูสามารถสั่งพิมพ์รายงานเสนอ ผอ. ได้เลยครับ`);
-        })
-        .catch((error) => {
-            console.error("เกิดข้อผิดพลาดในการประมวลผลรายเดือน:", error);
-            alert("❌ ระบบขัดข้อง ไม่สามารถประมวลผลข้อมูลรายเดือนได้");
-        });
-}
-
-// =========================================================
-// 📊 10. เพิ่มเติม: ฟังก์ชันส่งออกสถิติเฉลี่ยรายเดือนเป็นไฟล์ Excel (.xls)
-// =========================================================
-function exportMonthlyToExcel() {
-    const selectedMonth = document.getElementById('report-month').value;
-    if (!selectedMonth) {
-        return alert("⚠️ กรุณาเลือกเดือนและปีที่ต้องการส่งออกไฟล์ Excel ก่อนครับ");
-    }
-
-    const [year, month] = selectedMonth.split('-');
-    const startDate = `${year}-${month}-01`;
-    const endDate = `${year}-${month}-31`;
-
-    alert(`📊 กำลังดึงข้อมูลระบบคลาวด์เพื่อจัดทำไฟล์ Excel ของเดือน ${month}/${year}...`);
-
-    db.collection("attendance")
-        .where("date", ">=", startDate)
-        .where("date", "<=", endDate)
-        .get()
-        .then((querySnapshot) => {
-            if (querySnapshot.empty) {
-                return alert(`❌ ไม่พบข้อมูลสถิติในเดือน ${month}/${year} บนฐานข้อมูลคลาวด์ จึงไม่สามารถสร้างไฟล์ Excel ได้`);
-            }
-
-            let totalDaysRecorded = querySnapshot.size;
-            let monthlyClassData = {};
-
-            classesList.forEach(cls => {
-                monthlyClassData[cls] = { totalPresent: 0, totalAbsent: 0, totalLeave: 0, totalLate: 0 };
-            });
-
-            querySnapshot.forEach((doc) => {
-                const dayData = doc.data();
-                if (dayData.classes) {
-                    classesList.forEach((cls) => {
-                        if (dayData.classes[cls]) {
-                            monthlyClassData[cls].totalPresent += parseInt(dayData.classes[cls].present) || 0;
-                            monthlyClassData[cls].totalAbsent += parseInt(dayData.classes[cls].absent) || 0;
-                            monthlyClassData[cls].totalLeave += parseInt(dayData.classes[cls].leave) || 0;
-                            monthlyClassData[cls].totalLate += parseInt(dayData.classes[cls].late) || 0;
-                        }
-                    });
-                }
-            });
-
-            // 📝 เริ่มสร้างโครงสร้างตาราง HTML สำหรับแปลงร่างเป็น Excel (ฝัง CSS สไตล์เล่มรายงาน)
+            // โครงสร้างหัวรายงานตาราง Excel สไตล์มาตรฐานราชการไทย
             let excelTemplate = `
                 <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
                 <head>
                 <meta charset="utf-8">
                 <style>
-                    body { font-family: 'Aptos', 'Cordia New', sans-serif; }
-                    .title { font-size: 16px; font-weight: bold; text-align: center; height: 35px; }
-                    .subtitle { font-size: 12px; text-align: center; height: 25px; color: #555; }
-                    table { border-collapse: collapse; }
-                    th { background-color: #10b981; color: white; border: 0.5pt solid #000; text-align: center; font-weight: bold; height: 30px; }
-                    td { border: 0.5pt solid #000; text-align: center; height: 25px; }
-                    .class-name { font-weight: bold; background-color: #f8fafc; }
-                    .summary-row { background-color: #e2e8f0; font-weight: bold; }
-                    .percent-col { font-weight: bold; color: #10b981; }
+                    body { font-family: 'Khmer OS Battambang', 'Angsana New', sans-serif; }
+                    table { border-collapse: collapse; width: 100%; }
+                    th { background-color: #f1f5f9; color: #1e293b; border: 1px solid #cbd5e1; padding: 10px; font-weight: bold; text-align: center; }
+                    td { border: 1px solid #cbd5e1; padding: 8px; text-align: center; }
+                    .header-title { font-size: 18px; font-weight: bold; text-align: center; padding: 15px 0; }
+                    .sub-total { background-color: #f8fafc; font-weight: bold; }
                 </style>
                 </head>
                 <body>
+                <div class="header-title">รายงานสรุปข้อมูลสถิติการมาเรียน โรงเรียนบ้านกาเยาะ ประจำเดือน ค.ศ. ${month}/${year}</div>
                 <table>
-                    <tr><td colspan="8" class="title">รายงานสรุปสถิติการมาเรียนเฉลี่ยรายเดือน (ภาพรวมระดับโรงเรียน)</td></tr>
-                    <tr><td colspan="8" class="subtitle">ประจำเดือน: ${month}/${year} | จำนวนวันทำการที่มีการบันทึก: ${totalDaysRecorded} วัน</td></tr>
-                    <tr><td></td></tr>
                     <tr>
-                        <th>ระดับชั้น</th>
-                        <th>นักเรียนชาย</th>
-                        <th>นักเรียนหญิง</th>
-                        <th>มาเรียนวันนี้ (เฉลี่ย)</th>
-                        <th>ขาดเรียน (เฉลี่ย)</th>
-                        <th>ลาเรียน (เฉลี่ย)</th>
-                        <th>มาสาย (เฉลี่ย)</th>
-                        <th>เปอร์เซ็นต์มาเรียน</th>
+                        <th style="width: 140px;">วันที่บันทึก</th>
+                        <th>นักเรียนทั้งหมด (คน)</th>
+                        <th>มาเรียนรวม (คน)</th>
+                        <th>ขาดเรียนรวม (คน)</th>
+                        <th>ลาเรียนรวม (คน)</th>
+                        <th>มาสายรวม (คน)</th>
+                        <th>ร้อยละการมาเรียนรวมประจำวัน</th>
+                        <th style="width: 250px;">หมายเหตุ / บันทึกประจำวัน</th>
                     </tr>
             `;
 
-            let grandTotalStudents = 0;
+            let grandTotalStudentsSum = 0;
             let grandPresentAvgSum = 0;
             let grandAbsentAvgSum = 0;
             let grandLeaveAvgSum = 0;
             let grandLateAvgSum = 0;
+            let totalDaysCount = monthlyRecords.length;
 
-            // วนลูปคัดลอกข้อมูลเฉลี่ยรายวันใส่ลงแถวตาราง Excel
-            classesList.forEach(cls => {
-                const defaultData = defaultStudentsData[cls] || { male: 0, female: 0 };
-                const totalClass = defaultData.male + defaultData.female;
-                const classMonth = monthlyClassData[cls];
-
-                const avgPresent = parseFloat((classMonth.totalPresent / totalDaysRecorded).toFixed(1));
-                const avgAbsent = parseFloat((classMonth.totalAbsent / totalDaysRecorded).toFixed(1));
-                const avgLeave = parseFloat((classMonth.totalLeave / totalDaysRecorded).toFixed(1));
-                const avgLate = parseFloat((classMonth.totalLate / totalDaysRecorded).toFixed(1));
-                const classPercent = totalClass > 0 ? ((classMonth.totalPresent / (totalClass * totalDaysRecorded)) * 100).toFixed(2) : "0.00";
-
-                grandTotalStudents += totalClass;
-                grandPresentAvgSum += avgPresent;
-                grandAbsentAvgSum += avgAbsent;
-                grandLeaveAvgSum += avgLeave;
-                grandLateAvgSum += avgLate;
+            monthlyRecords.forEach((record) => {
+                const sum = record.summary || { totalStudents: 0, present: 0, absent: 0, leave: 0, late: 0, percentage: 0 };
+                
+                grandTotalStudentsSum = sum.totalStudents; // คงที่ตามจำนวนเด็กรวม
+                grandPresentAvgSum += sum.present;
+                grandAbsentAvgSum += sum.absent;
+                grandLeaveAvgSum += sum.leave;
+                grandLateAvgSum += sum.late;
 
                 excelTemplate += `
                     <tr>
-                        <td class="class-name">${cls}</td>
-                        <td>${defaultData.male}</td>
-                        <td>${defaultData.female}</td>
-                        <td>${avgPresent}</td>
-                        <td>${avgAbsent}</td>
-                        <td>${avgLeave}</td>
-                        <td>${avgLate}</td>
-                        <td class="percent-col">${classPercent}%</td>
+                        <td style="mso-number-format:'\\@';">${record.date}</td>
+                        <td>${sum.totalStudents}</td>
+                        <td>${sum.present}</td>
+                        <td>${sum.absent}</td>
+                        <td>${sum.leave}</td>
+                        <td>${sum.late}</td>
+                        <td style="color: #059669; font-weight: bold;">${sum.percentage}%</td>
+                        <td style="text-align: left; mso-number-format:'\\@';">${record.dailyNote || '-'}</td>
                     </tr>
                 `;
             });
 
-            // คำนวณเปอร์เซ็นต์รวมปิดท้ายเล่มรายงาน
-            const totalPercentage = grandTotalStudents > 0 ? ((grandPresentAvgSum / grandTotalStudents) * 100).toFixed(2) : "0.00";
+            // คำนวณหาค่าเฉลี่ยสะสมประจำเดือนเพื่อปิดท้ายตารางให้สมบูรณ์
+            grandPresentAvgSum = grandPresentAvgSum / totalDaysCount;
+            grandAbsentAvgSum = grandAbsentAvgSum / totalDaysCount;
+            grandLeaveAvgSum = grandLeaveAvgSum / totalDaysCount;
+            grandLateAvgSum = grandLateAvgSum / totalDaysCount;
+            const totalPercentage = grandTotalStudentsSum > 0 ? ((grandPresentAvgSum / grandTotalStudentsSum) * 100).toFixed(2) : "0.00";
 
-            // สรุปยอดรวม (Grand Summary) ท้ายตาราง
             excelTemplate += `
-                    <tr class="summary-row">
-                        <td>รวมภาพรวม</td>
-                        <td colspan="2">${grandTotalStudents} คน (นร.ทั้งหมด)</td>
+                    <tr class="sub-total">
+                        <td>ค่าเฉลี่ยประจำเดือน</td>
+                        <td>${grandTotalStudentsSum} คน (นร.ทั้งหมด)</td>
                         <td>${grandPresentAvgSum.toFixed(1)}</td>
                         <td>${grandAbsentAvgSum.toFixed(1)}</td>
                         <td>${grandLeaveAvgSum.toFixed(1)}</td>
                         <td>${grandLateAvgSum.toFixed(1)}</td>
                         <td style="color: #059669;">${totalPercentage}%</td>
+                        <td>สรุปข้อมูลจากคลาวด์รวม ${totalDaysCount} วันทำทำการ</td>
                     </tr>
                 </table>
                 </body>
@@ -716,3 +588,6 @@ function exportMonthlyToExcel() {
             alert("❌ ระบบขัดข้อง ไม่สามารถดึงฐานข้อมูลเพื่อส่งออกไฟล์ Excel ได้");
         });
 }
+
+// 🎬 เรียกการทำงานวาดตารางและเรนเดอร์ UI ทันทีที่เครื่องเบราว์เซอร์เปิดแอปสำเร็จ
+renderTable();
