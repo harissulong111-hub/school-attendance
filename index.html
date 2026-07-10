@@ -43,7 +43,6 @@
         body {
             font-family: 'Inter', 'Noto Sans Thai', sans-serif;
         }
-        /* ซ่อนลูกศรเพิ่มลดเลขใน Input เพื่อความสะอาดตาหรูหรา */
         input[type=number]::-webkit-inner-spin-button, 
         input[type=number]::-webkit-outer-spin-button { 
             -webkit-appearance: none; 
@@ -53,7 +52,11 @@
             -moz-appearance: textfield;
         }
 
-        /* 🖨️ ระบบจัดระเบียบโครงสร้างเพื่อพิมพ์รายงานลงแผ่นเดียว A4 */
+        /* โซนซ่อนลายเซ็นต์บนหน้าจอเว็บปกติ จะแสดงผลเมื่อสั่งพิมพ์เท่านั้น */
+        .print-signatures-zone {
+            display: none;
+        }
+
         @media print {
             @page {
                 size: A4 portrait;
@@ -153,6 +156,13 @@
             }
             td input::placeholder {
                 color: transparent !important;
+            }
+
+            /* แสดงผลบล็อกลายเซ็นต์ตอนจัดพิมพ์รายงาน PDF/A4 */
+            .print-signatures-zone {
+                display: block !important;
+                margin-top: 25px !important;
+                width: 100% !important;
             }
         }
     </style>
@@ -310,13 +320,42 @@
                         </tr>
                     </thead>
                     <tbody id="table-body" class="text-sm divide-y divide-slate-100 dark:divide-slate-800">
-                        </tbody>
+                    </tbody>
                 </table>
+            </div>
+
+            <div class="print-signatures-zone px-6 pb-4">
+                <div style="display: flex; justify-content: space-between; width: 100%; gap: 15px;">
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 15px;">
+                        <div style="font-size: 11px; font-weight: bold; margin-bottom: 2px;">ลงชื่อ ครูเวรประจำวัน</div>
+                        <div style="font-size: 11px; text-align: left; padding-left: 10px;">
+                            1. ลงชื่อ.......................................................... ครูเวร<br>
+                            <span style="padding-left: 12px;">(..........................................................)</span>
+                        </div>
+                        <div style="font-size: 11px; text-align: left; padding-left: 10px;">
+                            2. ลงชื่อ.......................................................... ครูเวร<br>
+                            <span style="padding-left: 12px;">(..........................................................)</span>
+                        </div>
+                        <div style="font-size: 11px; text-align: left; padding-left: 10px;">
+                            3. ลงชื่อ.......................................................... ครูเวร<br>
+                            <span style="padding-left: 12px;">(..........................................................)</span>
+                        </div>
+                    </div>
+                    
+                    <div style="width: 45%; display: flex; flex-direction: column; justify-content: flex-start; padding-top: 0px;">
+                        <div style="font-size: 11px; font-weight: bold; margin-bottom: 18px; text-align: left;">ผู้ตรวจเวรประจำวัน</div>
+                        <div style="font-size: 11px; text-align: left; padding-left: 5px;">
+                            ลงชื่อ.......................................................... ผู้ตรวจเวร<br>
+                            <span style="padding-left: 12px;">(..........................................................)</span><br>
+                            <span style="padding-left: 12px; font-size: 10px; color: #475569;">ตำแหน่ง.....................................................</span>
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <div class="p-6 bg-slate-50/50 dark:bg-slate-800/20 border-t border-slate-100 dark:border-slate-800 flex justify-end no-print">
                 <button onclick="saveAttendanceData()" class="px-8 py-3.5 bg-gradient-to-r from-blue-600 via-indigo-600 to-indigo-700 hover:from-blue-500 hover:to-indigo-600 text-white font-bold text-sm rounded-xl shadow-md hover:shadow-glow-emerald transition-all duration-300 flex items-center space-x-2">
-                    <i class="fa-solid fa-cloud-arrow-up"></i> <span>บันทึกข้อมูลลงระบบ</span>
+                    <i class="fa-solid fa-cloud-arrow-up"></i> <span>บันทึกข้อมูลลงระบบคลาวด์</span>
                 </button>
             </div>
         </div>
@@ -334,7 +373,6 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", () => {
-            // ส่วนควบคุมนาฬิกา Real-time
             function updateLiveClock() {
                 const timeEl = document.getElementById('live-time');
                 const dateEl = document.getElementById('live-date');
@@ -349,14 +387,12 @@
             setInterval(updateLiveClock, 1000);
             updateLiveClock();
 
-            // ตั้งค่าวันที่ปัจจุบันลงในช่องปฏิทิน
             const dateInput = document.getElementById('record-date');
             if (dateInput && !dateInput.value) {
                 const today = new Date().toISOString().split('T')[0];
                 dateInput.value = today;
             }
 
-            // ตรวจสอบสถานะการล็อกอินจาก Firebase (เมื่อล็อกอินสำเร็จ ให้ดึงสถิติทันที)
             if (typeof firebase !== 'undefined' && firebase.auth) {
                 firebase.auth().onAuthStateChanged((user) => {
                     if (user) {
@@ -364,17 +400,14 @@
                     }
                 });
             } else {
-                // หากไม่มีระบบ Firebase ให้ทดลองดึงข้อมูลทันทีเมื่อโหลด DOM สำเร็จ (รีเฟรชหน้า)
                 triggerLoadStatistics();
             }
 
-            // ถ้ามีการเปลี่ยนวันที่ในปฏิทิน ให้โหลดสถิติของวันนั้นใหม่ทันที
             if (dateInput) {
                 dateInput.addEventListener('change', triggerLoadStatistics);
             }
         });
 
-        // ฟังก์ชันช่วยสั่งงานไปยังแอปหลัก (app.js) เพื่อดึงข้อมูลสถิติมาแสดงผล
         function triggerLoadStatistics() {
             if (typeof loadAttendanceData === 'function') {
                 loadAttendanceData();
