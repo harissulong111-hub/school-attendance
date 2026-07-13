@@ -3,8 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Firebase core และระบบฐานข้อมูล Firestore -->
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    <!-- 🔐 เพิ่มระบบตรวจสอบตัวตนสมาชิก Firebase Authentication (Phase 1) -->
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
+    
     <title>ระบบบันทึกสถิติการมาเรียน (อ.1 - ป.6)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -52,18 +56,16 @@
             -moz-appearance: textfield;
         }
 
-        /* 🖨️ ระบบจัดระเบียบโครงสร้างเพื่อพิมพ์รายงานลงแผ่นเดียว A4 (แก้ไขจากภาพ Screenshot 2026-07-03 145708.png) */
+        /* 🖨️ ระบบจัดระเบียบโครงสร้างเพื่อพิมพ์รายงานลงแผ่นเดียว A4 */
         @media print {
-            /* 1. ตั้งค่าหน้ากระดาษและซ่อนส่วนที่ไม่เกี่ยวข้อง */
             @page {
                 size: A4 portrait;
-                margin: 10mm; /* เว้นระยะขอบให้ปลอดภัยจากการถูกเครื่องพิมพ์ตัดตัวอักษร */
+                margin: 10mm; 
             }
-            nav, button, #user-role-badge, .no-print, #attendanceChart-container {
+            nav, button, #user-role-badge, .no-print, #attendanceChart-container, #live-clock-container {
                 display: none !important;
             }
             
-            /* 2. เคลียร์ระยะขอบและพื้นหลังให้เป็นคลีนสไตล์ */
             body {
                 background: white !important;
                 color: black !important;
@@ -76,7 +78,6 @@
                 width: 100% !important;
             }
 
-            /* 3. แก้ไขการ์ด Dashboard บีบตัวอักษรตกขอบ: ปรับโครงสร้างให้อยู่แถวเดียวกันด้วย Flex ที่เฉลี่ยพื้นที่เท่าๆ กัน */
             .grid-cols-1 {
                 display: flex !important;
                 flex-direction: row !important;
@@ -92,16 +93,13 @@
                 background: #fff !important;
                 box-shadow: none !important;
             }
-            /* แยกการ์ด "มาสาย" ที่เคยยาว 2 ช่อง ให้มีขนาดกว้างเท่ากับการ์ดอื่นๆ พอดี */
             .sm\:col-span-2 {
                 grid-column: span 1 !important;
             }
-            /* ย่อขนาดตัวอักษรหัวข้อและตัวเลขแดชบอร์ดลงเพื่อให้แสดงผลในกระดาษได้พอดี */
             .text-3xl { font-size: 1.5rem !important; font-weight: 700 !important; }
             .text-2xl { font-size: 1.3rem !important; font-weight: 700 !important; }
             .text-xs { font-size: 10px !important; }
 
-            /* 4. แก้ไขเรื่องครูเวรแสดงผลซ้อน: จัดให้เป็นข้อความขีดเส้นใต้ธรรมดาและซ่อนไอคอน */
             .bg-white, .dark\:bg-premium-cardDark {
                 box-shadow: none !important;
                 border: 1px solid #e2e8f0 !important;
@@ -109,18 +107,17 @@
                 color: #000 !important;
             }
             .relative i {
-                display: none !important; /* ซ่อนไอคอนรูปคนในช่องครูเวรเวลาพิมพ์ */
+                display: none !important; 
             }
             input[type=text] {
                 border: none !important;
                 border-bottom: 1px dotted #94a3b8 !important;
                 background: transparent !important;
                 padding-left: 0 !important;
-                text-align: center !important;
+                text-align: left !important;
                 border-radius: 0 !important;
             }
 
-            /* 5. แก้ไขตารางขาดหายทางขวา (Scrollbar): บังคับไม่ให้โครงสร้างตารางขยายใหญ่เกินหน้ากระดาษ */
             .overflow-x-auto {
                 overflow: visible !important;
                 width: 100% !important;
@@ -129,26 +126,25 @@
                 border: 1px solid #94a3b8 !important;
                 border-collapse: collapse !important;
                 width: 100% !important;
-                table-layout: fixed !important; /* บังคับคำนวณขนาดคอลัมน์เฉลี่ยตามจริง ไม่ให้ดันทะลุขอบ */
+                table-layout: fixed !important; 
             }
             th, td {
                 border: 1px solid #cbd5e1 !important;
                 color: black !important;
-                padding: 6px 4px !important; /* กระชับช่องว่างเพื่อเพิ่มพื้นที่แสดงผล */
+                padding: 6px 4px !important; 
                 font-size: 11px !important;
                 text-align: center !important;
                 word-wrap: break-word !important;
             }
             th:first-child, td:first-child {
-                width: 10% !important; /* ระดับชั้นกว้างเท่าที่จำเป็น */
+                width: 10% !important; 
             }
             th:last-child, td:last-child {
                 text-align: right !important;
                 padding-right: 6px !important;
-                width: 16% !important; /* ขยายความกว้างร้อยละการมาเรียน */
+                width: 16% !important; 
             }
 
-            /* ลบกรอบอินพุตตัวเลขในตารางให้กลายเป็นข้อความนิ่งๆ สวยงาม */
             td input {
                 border: none !important;
                 background: transparent !important;
@@ -158,7 +154,6 @@
                 font-size: 11px !important;
                 color: black !important;
             }
-            /* บังคับซ่อนตัวอักษร Placeholder และคำว่า "ครบ" หรือ "ว่าง" เพื่อให้ช่องเป็นสีขาวสะอาดตาในใบรายงาน */
             td input::placeholder {
                 color: transparent !important;
             }
@@ -166,6 +161,39 @@
     </style>
 </head>
 <body class="bg-slate-50 dark:bg-premium-darkBg text-slate-800 dark:text-slate-200 min-h-screen transition-colors duration-300 antialiased">
+
+    <!-- 🔐 หน้าต่างล็อกอินพรีเมียมสไตล์ -->
+    <div id="login-overlay" class="fixed inset-0 bg-slate-950/95 backdrop-blur-xl z-50 flex items-center justify-center p-4 transition-all duration-500">
+        <div class="bg-white dark:bg-gray-900 w-full max-w-md p-8 rounded-3xl border border-slate-200/60 dark:border-slate-800/60 shadow-premium-lg">
+            <div class="text-center mb-8">
+                <div class="w-14 h-14 bg-gradient-to-tr from-blue-600 to-emerald-500 rounded-2xl flex items-center justify-center text-white shadow-md mx-auto mb-4">
+                    <i class="fa-solid fa-shield-lock text-xl"></i>
+                </div>
+                <h2 class="text-2xl font-black text-slate-800 dark:text-white tracking-tight">เข้าสู่ระบบจัดเก็บข้อมูลสถิติการมาเรียน </h2>
+                <p class="text-xs text-slate-400 mt-1">กรุณาลงชื่อเข้าใช้งานด้วยบัญชีผู้ใช้ประจำการเพื่อบันทึกข้อมูล</p>
+            </div>
+            
+            <form id="login-form" onsubmit="handleLogin(event)" class="space-y-5">
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">อีเมลผู้ใช้งาน</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-envelope text-slate-400 absolute left-4 top-3.5 text-sm"></i>
+                        <input type="email" id="login-email" required placeholder="name@school.ac.th" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl py-3 pl-11 pr-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 outline-none text-slate-800 dark:text-white transition-all">
+                    </div>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">รหัสผ่านบัญชี</label>
+                    <div class="relative">
+                        <i class="fa-solid fa-key text-slate-400 absolute left-4 top-3.5 text-sm"></i>
+                        <input type="password" id="login-password" required placeholder="••••••••" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl py-3 pl-11 pr-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 outline-none text-slate-800 dark:text-white transition-all">
+                    </div>
+                </div>
+                <button type="submit" class="w-full py-3.5 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white font-bold text-sm rounded-xl shadow-md transition-all duration-300">
+                    ยืนยันตัวตนเข้าสู่ระบบ
+                </button>
+            </form>
+        </div>
+    </div>
 
     <!-- Navbar หรูหราโปร่งแสง (Glassmorphism Effect) -->
     <nav class="bg-white/80 dark:bg-premium-cardDark/80 backdrop-blur-md border-b border-slate-200/60 dark:border-slate-800/60 sticky top-0 z-40 transition-all duration-300">
@@ -176,16 +204,27 @@
                         <i class="fa-solid fa-graduation-cap text-lg"></i>
                     </div>
                     <div>
-                        <span class="font-extrabold text-xl bg-gradient-to-r from-slate-900 via-blue-600 to-emerald-500 dark:from-white dark:via-blue-400 dark:to-emerald-400 bg-clip-text text-transparent tracking-tight">E-ATTENDANCE</span>
-                        <p class="text-[10px] text-slate-400 font-medium tracking-widest uppercase">Premium School Management</p>
+                        <span class="font-extrabold text-xl bg-gradient-to-r from-slate-900 via-blue-600 to-emerald-500 dark:from-white dark:via-blue-400 dark:to-emerald-400 bg-clip-text text-transparent tracking-tight">ระบบจัดเก็บข้อมูลสถิติการมาเรียน 2569</span>
+                        <p class="text-[10px] text-slate-400 font-medium tracking-widest uppercase">Bankayee School</p>
                     </div>
                 </div>
                 <div class="flex items-center space-x-4">
-                    <span id="user-role-badge" class="px-3 py-1 text-xs font-semibold rounded-full bg-slate-100 text-slate-600 border border-slate-200 dark:bg-slate-800 dark:text-slate-300 dark:border-slate-700">
-                        <i class="fa-solid fa-user-shield mr-1.5 text-blue-500"></i>ครูเวรประจำวัน
+                    <!-- ข้อ 2: เพิ่มการแสดงผล นาฬิกา และวันที่ แบบ Real-time ใกล้ชื่อผู้ใช้งานอย่างชัดเจน ⏰ -->
+                    <div id="live-clock-container" class="hidden sm:flex flex-col text-right px-3 py-1 border-r border-slate-200 dark:border-slate-800">
+                        <span id="live-time" class="text-sm font-black text-blue-600 dark:text-blue-400 tracking-wider">00:00:00</span>
+                        <span id="live-date" class="text-[10px] font-medium text-slate-400">วัน... ที่ .. ม.ค. ....</span>
+                    </div>
+
+                    <!-- แสดงชื่ออีเมลผู้ใช้งานคลาวด์และปุ่มกดล็อกเอาท์ -->
+                    <span id="user-role-badge" class="px-3 py-1.5 text-xs font-bold rounded-full bg-slate-100 text-slate-700 border border-slate-200 dark:bg-slate-800 dark:text-slate-200 dark:border-slate-700 shadow-sm">
+                        <i class="fa-solid fa-user-check mr-1.5 text-emerald-500"></i><span id="current-user-name">กำลังเช็คสิทธิ์...</span>
                     </span>
                     <button onclick="toggleDarkMode()" class="p-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-500 dark:text-amber-400 transition-all duration-200 shadow-sm">
                         <i class="fa-solid fa-moon text-sm" id="theme-icon"></i>
+                    </button>
+                    <!-- ปุ่มออกจากระบบ -->
+                    <button onclick="handleLogout()" class="no-print p-2.5 rounded-xl bg-rose-50 hover:bg-rose-100 dark:bg-rose-950/30 dark:hover:bg-rose-950/60 text-rose-600 dark:text-rose-400 transition-all duration-200 shadow-sm" title="ออกจากระบบ">
+                        <i class="fa-solid fa-right-from-bracket text-sm"></i>
                     </button>
                 </div>
             </div>
@@ -251,22 +290,12 @@
 
         </div>
 
-        <!-- บล็อกข้อมูลครูเวร (เรียบหรู คลาสสิก) -->
+        <!-- บล็อกหมายเหตุประจำวันเก็บขึ้นคลาวด์อัจฉริยะ -->
         <div class="bg-white dark:bg-premium-cardDark p-6 rounded-2xl border border-slate-200/60 dark:border-slate-800/60 shadow-premium-md mb-10">
-            <h4 class="text-sm font-bold mb-4 text-slate-700 dark:text-slate-300 tracking-wide flex items-center gap-2"><i class="fa-solid fa-user-tie text-blue-500 text-sm"></i>คณะกรรมการครูเวรประจำวัน</h4>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
-                <div class="relative">
-                    <i class="fa-solid fa-user text-xs text-slate-400 absolute left-4 top-3.5"></i>
-                    <input type="text" id="teacher1" placeholder="ชื่อ-นามสกุล ครูเวรคนที่ 1" class="w-full bg-slate-50/50 focus:bg-white dark:bg-slate-900/50 dark:focus:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl py-2.5 pl-9 pr-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 outline-none transition-all">
-                </div>
-                <div class="relative">
-                    <i class="fa-solid fa-user text-xs text-slate-400 absolute left-4 top-3.5"></i>
-                    <input type="text" id="teacher2" placeholder="ชื่อ-นามสกุล ครูเวรคนที่ 2" class="w-full bg-slate-50/50 focus:bg-white dark:bg-slate-900/50 dark:focus:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl py-2.5 pl-9 pr-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 outline-none transition-all">
-                </div>
-                <div class="relative">
-                    <i class="fa-solid fa-user text-xs text-slate-400 absolute left-4 top-3.5"></i>
-                    <input type="text" id="teacher3" placeholder="ชื่อ-นามสกุล ครูเวรคนที่ 3" class="w-full bg-slate-50/50 focus:bg-white dark:bg-slate-900/50 dark:focus:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl py-2.5 pl-9 pr-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 outline-none transition-all">
-                </div>
+            <h4 class="text-sm font-bold mb-3 text-slate-700 dark:text-slate-300 tracking-wide flex items-center gap-2"><i class="fa-solid fa-comment-dots text-indigo-500 text-sm"></i>หมายเหตุ / บันทึกเพิ่มเติมประจำวัน</h4>
+            <div class="relative">
+                <i class="fa-solid fa-pen text-xs text-slate-400 absolute left-4 top-4"></i>
+                <input type="text" id="daily-note" placeholder="เช่น วันนี้มีกิจกรรมโรงเรียน หรือ นักเรียนห้อง ป.2 ลาป่วยพร้อมกัน 3 คนด้วยโรคไข้หวัดใหญ่" class="w-full bg-slate-50/50 focus:bg-white dark:bg-slate-900/50 dark:focus:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl py-3 pl-9 pr-4 text-sm focus:border-blue-500 focus:ring-1 focus:ring-blue-500/30 outline-none text-slate-800 dark:text-white transition-all">
             </div>
         </div>
 
@@ -277,11 +306,12 @@
                     <i class="fa-solid fa-list-check text-emerald-500 text-sm"></i> สรุปและประมวลผลข้อมูลรายชั้นเรียน
                 </h3>
                 <div class="flex items-center gap-3 w-full sm:w-auto justify-end">
-                    <button type="button" onclick="fillAllPresent()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-sm hover:shadow-glow-emerald transition-all text-xs font-semibold flex items-center gap-2">
+                    <button type="button" onclick="fillAllPresent()" class="px-4 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl shadow-sm hover:shadow-glow-emerald transition-all text-xs font-semibold flex items-center gap-2A">
                         <i class="fa-solid fa-check-double"></i> นักเรียนมาครบทุกคน
                     </button>
+                    <!-- ข้อ 1: ปรับช่องกดเลือกวันที่ ปฏิทิน ให้มีขนาดใหญ่ขึ้น ชัดเจน กดง่ายขึ้น 📅 -->
                     <div class="relative">
-                        <input type="date" id="record-date" class="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl px-4 py-2 text-xs text-emerald-500 font-bold outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/30 shadow-sm appearance-none">
+                        <input type="date" id="record-date" class="bg-white dark:bg-slate-900 border-2 border-emerald-500 dark:border-emerald-600 rounded-xl px-5 py-2.5 text-sm text-emerald-600 dark:text-emerald-400 font-extrabold outline-none focus:ring-2 focus:ring-emerald-500/30 shadow-md transition-all cursor-pointer min-w-[170px]">
                     </div>
                 </div>
             </div>
@@ -304,23 +334,86 @@
                     </tbody>
                 </table>
             </div>
-<!-- เมนูปุ่มกดด้านล่างหรูหรา -->
-<div class="p-6 bg-slate-50/40 dark:bg-slate-900/40 border-t border-slate-200/60 dark:border-slate-800/60 flex flex-col sm:flex-row justify-end gap-3">
-    <!-- ⚠️ ปุ่มล้างฐานข้อมูลเพื่อเริ่มต้นใช้งานจริง (เพิ่มใหม่ - ซ่อนไม่ให้เห็นเวลาพิมพ์รายงาน) -->
-    <button type="button" onclick="clearAllAttendanceData()" class="no-print px-5 py-3 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 hover:border-rose-300 dark:bg-rose-950/20 dark:hover:bg-rose-950/40 dark:text-rose-400 dark:border-rose-900/50 font-semibold text-sm rounded-xl transition-all shadow-sm flex items-center justify-center gap-2">
-        <i class="fa-solid fa-trash-can-arrow-up text-xs"></i> ล้างข้อมูลเก่าเพื่อเริ่มใช้งานจริง
-    </button>
+            <!-- เมนูปุ่มกดด้านล่างหรูหรา -->
+            <div class="p-6 bg-slate-50/40 dark:bg-slate-900/40 border-t border-slate-200/60 dark:border-slate-800/60 flex flex-col sm:flex-row justify-end gap-3">
+                <button type="button" onclick="clearAllAttendanceData()" class="no-print px-5 py-3 bg-rose-50 hover:bg-rose-100 text-rose-600 border border-rose-200 hover:border-rose-300 dark:bg-rose-950/20 dark:hover:bg-rose-950/40 dark:text-rose-400 dark:border-rose-900/50 font-semibold text-sm rounded-xl transition-all shadow-sm flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-trash-can-arrow-up text-xs"></i> ล้างข้อมูล
+                </button>
 
-    <button type="button" onclick="printReport()" class="px-5 py-3 bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 border border-slate-700/50 text-white font-medium text-sm rounded-xl transition-all shadow-sm flex items-center justify-center gap-2">
-        <i class="fa-solid fa-print"></i> พิมพ์รายงานสรุป / เซฟ PDF
-    </button>
-    <button onclick="saveAttendanceData()" class="px-6 py-3 bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-500 hover:from-blue-500 hover:to-emerald-400 text-white font-semibold text-sm rounded-xl shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center">
-        <i class="fa-solid fa-cloud-arrow-up mr-2 text-xs"></i> อัปเดตข้อมูลขึ้นระบบคลาวด์พรีเมียม
-    </button>
-</div>
+                <button type="button" onclick="printReport()" class="px-5 py-3 bg-slate-800 hover:bg-slate-900 dark:bg-slate-700 dark:hover:bg-slate-600 border border-slate-700/50 text-white font-medium text-sm rounded-xl transition-all shadow-sm flex items-center justify-center gap-2">
+                    <i class="fa-solid fa-print"></i> พิมพ์รายงานสรุป / Save PDF
+                </button>
+                <button onclick="saveAttendanceData()" class="px-6 py-3 bg-gradient-to-r from-blue-600 via-indigo-600 to-emerald-500 hover:from-blue-500 hover:to-emerald-400 text-white font-semibold text-sm rounded-xl shadow-md hover:shadow-lg transition-all duration-300 flex items-center justify-center">
+                    <i class="fa-solid fa-cloud-arrow-up mr-2 text-xs"></i> บันทึกข้อมูลสถิติ
+                </button>
+            </div>
         </div>
 
     </main>
+
+    <!-- สคริปต์เพิ่มเติมสำหรับการทำงานของนาฬิกา และการโหลดสถิติอัตโนมัติ 🕒 -->
+    <script>
+        // ฟังก์ชันอัปเดตวันและเวลารูปแบบไทย
+        function updateLiveClock() {
+            const now = new Date();
+            
+            // รูปแบบเวลา 00:00:00
+            const timeString = now.toLocaleTimeString('th-TH', { hour12: false });
+            
+            // รูปแบบวันที่ไทย เช่น วันเสาร์ ที่ 4 ก.ค. 2569
+            const options = { weekday: 'long', day: 'numeric', month: 'short', year: 'numeric' };
+            const dateString = now.toLocaleDateString('th-TH', options);
+            
+            const timeEl = document.getElementById('live-time');
+            const dateEl = document.getElementById('live-date');
+            
+            if(timeEl) timeEl.textContent = timeString;
+            if(dateEl) dateEl.textContent = "📅" + dateString;
+        }
+        setInterval(updateLiveClock, 1000);
+        updateLiveClock(); // รันทันทีเมื่อโหลดหน้าเว็บ
+
+        // ข้อ 3: ระบบดึงสถิติอัตโนมัติเมื่อ รีเฟรชหน้าจอ หรือ ล็อกอินสำเร็จ หรือ มีการเปลี่ยนวันที่
+        document.addEventListener("DOMContentLoaded", () => {
+            // ตั้งค่าวันที่ปัจจุบันลงในช่อง input[type=date] เป็นค่าเริ่มต้นถ้ายังไม่มีค่า
+            const dateInput = document.getElementById('record-date');
+            if (dateInput && !dateInput.value) {
+                const today = new Date().toISOString().split('T')[0];
+                dateInput.value = today;
+            }
+
+            // ตรวจสอบสถานะการล็อกอินจาก Firebase (เมื่อล็อกอินสำเร็จ ให้ดึงสถิติทันที)
+            if (typeof firebase !== 'undefined' && firebase.auth) {
+                firebase.auth().onAuthStateChanged((user) => {
+                    if (user) {
+                        triggerLoadStatistics();
+                    }
+                });
+            } else {
+                // หากไม่มีระบบ Firebase ให้ทดลองดึงข้อมูลทันทีเมื่อโหลด DOM สำเร็จ (รีเฟรชหน้า)
+                triggerLoadStatistics();
+            }
+
+            // ถ้ามีการเปลี่ยนวันที่ในปฏิทิน ให้โหลดสถิติของวันนั้นใหม่ทันที
+            if (dateInput) {
+                dateInput.addEventListener('change', triggerLoadStatistics);
+            }
+        });
+
+        // ฟังก์ชันช่วยสั่งงานไปยังแอปหลัก (app.js) เพื่อดึงข้อมูลสถิติมาแสดงผล
+        function triggerLoadStatistics() {
+            // ดักเรียกฟังก์ชันที่มีแนวโน้มว่าจะอยู่ใน app.js เพื่อโหลดสถิติปัจจุบันของวันนั้นๆ
+            if (typeof loadAttendanceData === 'function') {
+                loadAttendanceData();
+            } else if (typeof fetchAttendanceData === 'function') {
+                fetchAttendanceData();
+            } else if (typeof checkAndLoadDailyData === 'function') {
+                checkAndLoadDailyData();
+            } else {
+                console.log("ระบบพร้อมแสดงผลสถิติ: รอแอปพลิเคชันหลักเชื่อมโยงฐานข้อมูลข้อมูล");
+            }
+        }
+    </script>
 
     <script src="app.js"></script>
 </body>

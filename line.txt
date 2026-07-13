@@ -3,4 +3,6 @@
 ความลับแชนแนล  6919ade7887a80d5bfed48470d47b1d3
 
 
-https://developers.line.biz/console/channel/2010598838/messaging-api
+https://developers.line.biz/console/channel/2010598838/messaging-apis
+
+https://manager.line.biz/account/@553yqeac/setting/response

@@ -1,0 +1,23 @@
+
+1.หน้าสแกนหน้าของคุณครู (ตัดออกไม่ใช้)    http://localhost:3000/attendance     
+
+2.หน้าสแกนหน้าของเจ้าหน้าที่  http://localhost:3000/staff/attendance
+
+3.หน้าจัดการรายชื่อครู (แอดมิน)  http://localhost:3000/admin/teachers
+
+4.หน้าลงทะเบียนใบหน้าครูใหม่  http://localhost:3000/admin/enrollment
+
+5.หน้าดูประวัติและโหลดรายงาน CSV http://localhost:3000/admin/logs
+
+6.หน้าลงเวลาเข้างาน  http://localhost:3000/attendance/attendance-in
+
+7.หน้าลงเวลากลับบ้าน  http://localhost:3000/attendance/attendance-out    
+
+8.สร้าง QR  http://localhost:3000/attendance/generator
+
+9.หน้าแสดง แดขชบอร์ด สรุป   http://localhost:3000/attendance/admin
+
+
+ npx vercel --prod (รันอัพเดทไฟล์)
+
+ Set-ExecutionPolicy RemoteSigned -Scope CurrentUser  (PowerShell )

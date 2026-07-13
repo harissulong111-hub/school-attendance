@@ -1,0 +1,43 @@
+function doPost(e) {
+  try {
+    var channelAccessToken = "p0/ODIYQe601saB1r4Uk5XCw8iOLlN1zZGXL210b+B4+p3oUh1eVhgE5WVe55yr/zgkxNfSTclC08urjh4DCl0XZ6h2eS5WLyO4MllzolWPTI6cDOCLilKbKOwLdbRQs97FI3eXA38BN8cGZ8b2lHgdB04t89/1O/w1cDnyilFU="; 
+    
+    var jsonString = e.postData.contents;
+    var eventData = JSON.parse(jsonString);
+    
+    // ดักจับข้อมูลที่ส่งมาจาก LINE
+    var event = eventData.events[0];
+    var replyToken = event.replyToken;
+    
+    // ดึงรหัส Group ID ออกมา
+    var groupId = "";
+    if (event.source && event.source.groupId) {
+      groupId = event.source.groupId;
+    }
+    
+    // จัดข้อความตอบกลับ
+    var textToSend = "สวัสดีครับคุณครู! รหัส Group ID ของกลุ่มนี้คือ:\n\n" + groupId;
+    
+    // สั่งให้บอทพิมพ์ตอบกลับในกลุ่มทันที
+    var url = "https://api.line.me/v2/bot/message/reply";
+    var payload = {
+      "replyToken": replyToken,
+      "messages": [{ "type": "text", "text": textToSend }]
+    };
+    
+    var options = {
+      "method" : "post",
+      "headers": {
+        "Content-Type": "application/json",
+        "Authorization": "Bearer " + channelAccessToken
+      },
+      "payload" : JSON.stringify(payload)
+    };
+    
+    UrlFetchApp.fetch(url, options);
+    return ContentService.createTextOutput("OK");
+                         
+  } catch(err) {
+    return ContentService.createTextOutput("Error: " + err.toString());
+  }
+}
