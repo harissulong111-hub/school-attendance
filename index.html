@@ -43,6 +43,7 @@
         body {
             font-family: 'Inter', 'Noto Sans Thai', sans-serif;
         }
+        /* 🟢 แก้ไขจุดที่ 1: ลบปีกกาและเครื่องหมายแปลกปลอมส่วนเกินออก เพื่อให้สแกนผ่านเรียบร้อย */
         input[type=number]::-webkit-inner-spin-button, 
         input[type=number]::-webkit-outer-spin-button { 
             -webkit-appearance: none; 
@@ -71,7 +72,8 @@
             pointer-events: none;
             font-size: 0.875rem;
             font-weight: 600;
-            letter-wide: 0.025em;
+            /* 🟢 แก้ไขจุดที่ 2: เปลี่ยนจาก letter-wide เป็น letter-spacing ตามหลักมาตรฐานสากล */
+            letter-spacing: 0.025em;
         }
         #record-date {
             color: transparent !important;
@@ -135,6 +137,7 @@
                 border: 1px solid #e2e8f0 !important;
                 background-color: #fff !important;
                 color: #000 !important;
+                box-shadow: none !important;
             }
             .relative i {
                 display: none !important; 
@@ -342,25 +345,25 @@
             </div>
             
             <div class="overflow-x-auto">
-              <table class="w-full text-left border-collapse">
-                <thead>
-                <tr class="bg-slate-50/70 dark:bg-slate-800/40 text-slate-400 font-bold uppercase text-sm tracking-wider border-b border-slate-100 dark:border-slate-800">
-                <th class="p-4 text-center">ระดับชั้น</th>
-                <th class="p-4 text-center">ชาย (ทั้งหมด)</th>
-                <th class="p-4 text-center">หญิง (ทั้งหมด)</th>
-                <th class="p-4 text-center bg-blue-500/5 text-blue-500">นักเรียนชายมา</th>
-                <th class="p-4 text-center bg-pink-500/5 text-pink-500">นักเรียนหญิงมา</th>
-                <th class="p-4 text-center bg-emerald-500/5 text-emerald-500">รวมนักเรียนมาวันนี้</th>
-                <th class="p-4 text-center">ขาดเรียน</th>
-                <th class="p-4 text-center">ลาเรียน</th>
-                <th class="p-4 text-center">มาสาย</th>
-                <th class="p-4 text-right pr-6">ร้อยละการมาเรียน</th>
-            </tr>
-        </thead>
-        <tbody id="table-body" class="text-sm divide-y divide-slate-100 dark:divide-slate-800">
-        </tbody>
-    </table>
-</div>
+                <table class="w-full text-left border-collapse">
+                    <thead>
+                        <tr class="bg-slate-50/70 dark:bg-slate-800/40 text-slate-400 font-bold uppercase text-sm tracking-wider border-b border-slate-100 dark:border-slate-800">
+                            <th class="p-4 text-center">ระดับชั้น</th>
+                            <th class="p-4 text-center">ชาย (ทั้งหมด)</th>
+                            <th class="p-4 text-center">หญิง (ทั้งหมด)</th>
+                            <th class="p-4 text-center bg-blue-500/5 text-blue-500">นักเรียนชายมา</th>
+                            <th class="p-4 text-center bg-pink-500/5 text-pink-500">นักเรียนหญิงมา</th>
+                            <th class="p-4 text-center bg-emerald-500/5 text-emerald-500">รวมนักเรียนมาวันนี้</th>
+                            <th class="p-4 text-center">ขาดเรียน</th>
+                            <th class="p-4 text-center">ลาเรียน</th>
+                            <th class="p-4 text-center">มาสาย</th>
+                            <th class="p-4 text-right pr-6">ร้อยละการมาเรียน</th>
+                        </tr>
+                    </thead>
+                    <tbody id="table-body" class="text-sm divide-y divide-slate-100 dark:divide-slate-800">
+                    </tbody>
+                </table>
+            </div>
 
             <div class="print-signatures-zone px-6 pb-6">
                 <div style="display: flex; justify-content: space-between; width: 100%; gap: 30px;">

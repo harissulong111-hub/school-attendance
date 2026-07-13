@@ -236,6 +236,21 @@ function saveAttendanceData() {
     const targetDate = document.getElementById('record-date').value;
     if (!targetDate) return alert("กรุณาเลือกวันที่ก่อนบันทึกข้อมูลครับ");
 
+    // ⏳ [ระบบเพิ่มใหม่]: ตรวจสอบสิทธิ์การกดซ้ำซ้อนภายในระยะเวลา 1 นาที (Cooldown 60 วินาที) แยกตามวันที่เลือก
+    const currentTime = Date.now();
+    const lastSaveTimestamp = localStorage.getItem(`cooldown_save_date_${targetDate}`);
+    const cooldownPeriod = 60 * 1000; // 1 นาที ในรูปแบบมิลลิวินาที
+
+    if (lastSaveTimestamp) {
+        const timeElapsed = currentTime - parseInt(lastSaveTimestamp);
+        if (timeElapsed < cooldownPeriod) {
+            const secondsRemaining = Math.ceil((cooldownPeriod - timeElapsed) / 1000);
+            // แสดงหน้าต่างข้อความขนาดใหญ่แจ้งเตือนอย่างเด่นชัด
+            alert(`⚠️ คุณได้กดบันทึกข้อมูลลงระบบคลาวด์เรียบร้อยแล้ว\nจะกดบันทึกได้อีกครั้งในอีก ${secondsRemaining} วินาที`);
+            return; // ล็อกและตัดกระบวนการทันทีเพื่อไม่ให้ Firebase บันทึกซ้ำ และ LINE ไม่แจ้งเตือนซ้ำ
+        }
+    }
+
     // รับข้อมูลจากช่องหมายเหตุประจำวัน
     const dailyNote = document.getElementById('daily-note').value;
 
@@ -293,6 +308,9 @@ function saveAttendanceData() {
 
     db.collection("attendance").doc(targetDate).set(attendancePayload)
         .then(() => {
+            // 💾 บันทึกเวลาปัจจุบันลงในความจำเครื่องสำเร็จเพื่อตั้ง Cooldown ล็อกการทำงานซ้ำใน 1 นาที
+            localStorage.setItem(`cooldown_save_date_${targetDate}`, Date.now().toString());
+
             alert(`🎉 สำเร็จ! บันทึกข้อมูลของวันที่ ${targetDate} โดยครูผู้ดูแล (${currentUserEmail}) เข้าสู่คลาวด์แล้ว\n🚀 ระบบกำลังส่งรายงานเข้า LINE Bot อัตโนมัติ...`);
             
             // 🌐 เชื่อมต่อสะพานข้อมูล Google Apps Script Webhook API ของคุณครู
