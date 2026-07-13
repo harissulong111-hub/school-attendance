@@ -57,6 +57,36 @@
             display: none;
         }
 
+        /* ตกแต่งและซ่อนปฏิทินสากลของเดิมเพื่อครอบด้วยปฏิทินภาษาไทย */
+        .thai-date-wrapper {
+            position: relative;
+            width: 100%;
+        }
+        .thai-date-display {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            padding-left: 3rem;
+            pointer-events: none;
+            font-size: 0.875rem;
+            font-weight: 600;
+            letter-wide: 0.025em;
+        }
+        #record-date {
+            color: transparent !important;
+        }
+        #record-date::-webkit-calendar-picker-indicator {
+            position: absolute;
+            right: 12px;
+            top: 0;
+            bottom: 0;
+            width: 80%;
+            height: 100%;
+            opacity: 0;
+            cursor: pointer;
+        }
+
         @media print {
             @page {
                 size: A4 portrait;
@@ -163,6 +193,13 @@
                 display: block !important;
                 margin-top: 25px !important;
                 width: 100% !important;
+            }
+            
+            /* แสดงผลข้อความวันที่ในแบบพิมพ์ PDF */
+            .thai-date-display {
+                color: black !important;
+                padding-left: 0 !important;
+                font-size: 14px !important;
             }
         }
     </style>
@@ -271,10 +308,11 @@
 
             <div class="bg-white dark:bg-premium-cardDark p-6 rounded-2xl border border-slate-200/60 dark:border-slate-800/60 shadow-premium-md flex flex-col justify-between transition-all duration-300 hover:shadow-premium-lg">
                 <div>
-                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">เลือกวันที่บันทึกสถิติ</label>
-                    <div class="relative">
-                        <i class="fa-solid fa-calendar-days text-blue-500 absolute left-4 top-3.5 text-base"></i>
-                        <input type="date" id="record-date" onchange="loadAttendanceData()" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl py-3 pl-12 pr-4 text-sm font-semibold tracking-wide text-slate-800 dark:text-white focus:ring-1 focus:ring-blue-500/30 outline-none transition-all">
+                    <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">วันที่บันทึกสถิติ</label>
+                    <div class="thai-date-wrapper relative">
+                        <i class="fa-solid fa-calendar-days text-blue-500 absolute left-4 top-3.5 text-base z-10"></i>
+                        <span id="thai-date-text" class="thai-date-display text-slate-800 dark:text-white">กำลังโหลด...</span>
+                        <input type="date" id="record-date" onchange="loadAttendanceData(); updateThaiDateDisplay(this.value);" class="w-full bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 rounded-xl py-3 pl-12 pr-4 text-sm font-semibold tracking-wide outline-none transition-all">
                     </div>
                 </div>
                 <div class="mt-4 grid grid-cols-2 gap-3 no-print">
@@ -295,11 +333,11 @@
             <div class="p-6 border-b border-slate-100 dark:border-slate-800 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h2 class="text-lg font-bold tracking-tight text-slate-800 dark:text-white">ตารางสรุปจำแนกรายชั้นเรียน</h2>
-                    <p class="text-xs text-slate-400">กรุณากรอกจำนวนนักเรียนที่มาเรียนจริงในแต่ละวัน ระบบจะคำนวณอัตราส่วนให้อัตโนมัติ</p>
+                    <p class="text-xs text-slate-400">จำนวนนักเรียนที่มาเรียนจริงในแต่ละวัน</p>
                 </div>
                 <div class="w-full sm:w-72 relative">
                     <i class="fa-solid fa-pen-fancy text-slate-400 absolute left-3.5 top-3 text-xs"></i>
-                    <input type="text" id="daily-note" placeholder="บันทึกหมายเหตุประจำวัน (ถ้ามี)..." class="w-full bg-slate-50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700 rounded-xl py-2 pl-9 pr-3 text-xs outline-none focus:border-blue-500 dark:text-slate-200 transition-all">
+                    <input type="text" id="daily-note" placeholder="เมนูอาหารประจำวัน ..." class="w-full bg-slate-50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700 rounded-xl py-2 pl-9 pr-3 text-xs outline-none focus:border-blue-500 dark:text-slate-200 transition-all">
                 </div>
             </div>
             
@@ -324,30 +362,21 @@
                 </table>
             </div>
 
-            <div class="print-signatures-zone px-6 pb-4">
-                <div style="display: flex; justify-content: space-between; width: 100%; gap: 15px;">
-                    <div style="flex: 1; display: flex; flex-direction: column; gap: 15px;">
+            <div class="print-signatures-zone px-6 pb-6">
+                <div style="display: flex; justify-content: space-between; width: 100%; gap: 30px;">
+                    <div style="flex: 1; display: flex; flex-direction: column; gap: 15px; align-items: flex-start;">
                         <div style="font-size: 11px; font-weight: bold; margin-bottom: 2px;">ลงชื่อ ครูเวรประจำวัน</div>
-                        <div style="font-size: 11px; text-align: left; padding-left: 10px;">
-                            1. ลงชื่อ.......................................................... ครูเวร<br>
-                            <span style="padding-left: 12px;">(..........................................................)</span>
-                        </div>
-                        <div style="font-size: 11px; text-align: left; padding-left: 10px;">
-                            2. ลงชื่อ.......................................................... ครูเวร<br>
-                            <span style="padding-left: 12px;">(..........................................................)</span>
-                        </div>
-                        <div style="font-size: 11px; text-align: left; padding-left: 10px;">
-                            3. ลงชื่อ.......................................................... ครูเวร<br>
-                            <span style="padding-left: 12px;">(..........................................................)</span>
-                        </div>
+                        <div id="duty-teacher-1" style="width: 100%;"></div>
+                        <div id="duty-teacher-2" style="width: 100%;"></div>
+                        <div id="duty-teacher-3" style="width: 100%;"></div>
                     </div>
                     
-                    <div style="width: 45%; display: flex; flex-direction: column; justify-content: flex-start; padding-top: 0px;">
-                        <div style="font-size: 11px; font-weight: bold; margin-bottom: 18px; text-align: left;">ผู้ตรวจเวรประจำวัน</div>
-                        <div style="font-size: 11px; text-align: left; padding-left: 5px;">
-                            ลงชื่อ.......................................................... ผู้ตรวจเวร<br>
-                            <span style="padding-left: 12px;">(..........................................................)</span><br>
-                            <span style="padding-left: 12px; font-size: 10px; color: #475569;">ตำแหน่ง.....................................................</span>
+                    <div style="width: 45%; display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-start;">
+                        <div style="width: 280px; display: flex; flex-direction: column; align-items: center; text-align: center;">
+                            <div style="font-size: 11px; font-weight: bold; margin-bottom: 15px; align-self: flex-start; text-align: left;">ผู้ตรวจเวรประจำวัน</div>
+                            <div style="font-size: 11px; margin-top: 2px;">ลงชื่อ.......................................................... ผู้ตรวจเวร</div>
+                            <div style="font-size: 11px; margin-top: 4px;">(นางสาวมนัสวี  มณีสวัสดิ์)</div>
+                            <div style="font-size: 10px; color: #475569; margin-top: 2px;">ตำแหน่ง ผู้อำนวยการโรงเรียนบ้านกาหยี</div>
                         </div>
                     </div>
                 </div>
@@ -372,6 +401,87 @@
     </main>
 
     <script>
+        const dutyTeachersMap = {
+            1: ["นางสาวนวลมณี  ชัยกิจวัฒนะ", "นางสาวซัยนับ  เจ๊ะอุบง", "นางสาวฮัฝเซาะห์  มะแซ"],
+            2: ["นางศิริกาญจนา  ค้ำชู", "นางสาวอารีนี  เจ๊ะแว"],
+            3: ["นางยาวีหย๊ะ  สามะ", "นางสาวเจะรุสนัน  ปาโห๊ะ"],
+            4: ["นายอาแซ  โตะแม", "นายมะเปาซี  โตะแม", "นายฮาริส   สุหลง"],
+            5: ["นางสาวยูรีนา  ดอคอ", "นางแวฮามีด๊ะ  โตะแม"]
+        };
+
+        function updateDutyTeachersByDate(dateString) {
+            if (!dateString) return;
+            const selectedDate = new Date(dateString);
+            const dayOfWeek = selectedDate.getDay();
+            
+            const t1 = document.getElementById("duty-teacher-1");
+            const t2 = document.getElementById("duty-teacher-2");
+            const t3 = document.getElementById("duty-teacher-3");
+            
+            if (!t1 || !t2 || !t3) return;
+
+            const teachers = dutyTeachersMap[dayOfWeek] || [];
+
+            if (teachers[0]) {
+                t1.style.display = "block";
+                t1.innerHTML = `
+                    <div style="display: flex; flex-direction: column; align-items: center; width: 280px; text-align: center;">
+                        <div style="font-size: 11px;">1. ลงชื่อ.......................................................... ครูเวร</div>
+                        <div style="font-size: 11px; margin-top: 4px;">(${teachers[0]})</div>
+                    </div>
+                `;
+            } else {
+                t1.style.display = "none";
+            }
+
+            if (teachers[1]) {
+                t2.style.display = "block";
+                t2.innerHTML = `
+                    <div style="display: flex; flex-direction: column; align-items: center; width: 280px; text-align: center;">
+                        <div style="font-size: 11px;">2. ลงชื่อ.......................................................... ครูเวร</div>
+                        <div style="font-size: 11px; margin-top: 4px;">(${teachers[1]})</div>
+                    </div>
+                `;
+            } else {
+                t2.style.display = "none";
+            }
+
+            if (teachers[2]) {
+                t3.style.display = "block";
+                t3.innerHTML = `
+                    <div style="display: flex; flex-direction: column; align-items: center; width: 280px; text-align: center;">
+                        <div style="font-size: 11px;">3. ลงชื่อ.......................................................... ครูเวร</div>
+                        <div style="font-size: 11px; margin-top: 4px;">(${teachers[2]})</div>
+                    </div>
+                `;
+            } else {
+                t3.style.display = "none";
+            }
+        }
+
+        function updateThaiDateDisplay(dateValue) {
+            const displayEl = document.getElementById('thai-date-text');
+            if (!displayEl) return;
+            
+            if (!dateValue) {
+                displayEl.innerText = "เลือกวันที่...";
+                return;
+            }
+            
+            const parts = dateValue.split('-');
+            if (parts.length === 3) {
+                const year = parseInt(parts[0]);
+                const month = parseInt(parts[1]) - 1;
+                const day = parseInt(parts[2]);
+                
+                const localDate = new Date(year, month, day);
+                const options = { year: 'numeric', month: 'long', day: 'numeric' };
+                displayEl.innerText = localDate.toLocaleDateString('th-TH', options);
+                
+                updateDutyTeachersByDate(dateValue);
+            }
+        }
+
         document.addEventListener("DOMContentLoaded", () => {
             function updateLiveClock() {
                 const timeEl = document.getElementById('live-time');
@@ -381,16 +491,19 @@
                 const now = new Date();
                 timeEl.innerText = now.toLocaleTimeString('th-TH', { hour12: false });
                 
-                const options = { weekday: 'long', year: 'numeric', month: 'short', day: 'numeric' };
+                const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
                 dateEl.innerText = now.toLocaleDateString('th-TH', options);
             }
             setInterval(updateLiveClock, 1000);
             updateLiveClock();
 
             const dateInput = document.getElementById('record-date');
-            if (dateInput && !dateInput.value) {
-                const today = new Date().toISOString().split('T')[0];
-                dateInput.value = today;
+            if (dateInput) {
+                if (!dateInput.value) {
+                    const today = new Date().toISOString().split('T')[0];
+                    dateInput.value = today;
+                }
+                updateThaiDateDisplay(dateInput.value);
             }
 
             if (typeof firebase !== 'undefined' && firebase.auth) {
