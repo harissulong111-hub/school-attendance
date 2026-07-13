@@ -34,8 +34,10 @@ auth.onAuthStateChanged((user) => {
         if (userNameBadge) userNameBadge.innerText = user.email; // แสดงอีเมลที่แถบบาร์บน
         console.log("🔒 ยืนยันตัวตนสำเร็จโดยบัญชี:", user.email);
         
-        // โหลดข้อมูลของวันที่เลือกปัจจุบันทันทีหลังจากล็อกอินเสร็จ
-        loadAttendanceData();
+        // ⏳ [ปรับปรุงตรรกะใหม่]: หน่วงเวลารอการสิงสิทธิ์ความปลอดภัย (Auth Token) 300ms เพื่อป้องกันคลาวด์ปฏิเสธสิทธิ์
+        setTimeout(() => {
+            loadStudentMasterDataFromServer();
+        }, 300);
     } else {
         // กรณีไม่มีการเข้าสู่ระบบ หรือกด Logout ออกไป
         currentUserEmail = null;
@@ -63,7 +65,7 @@ function handleLogin(e) {
 
 // ฟังก์ชันออกจากระบบ (Logout)
 function handleLogout() {
-    if (confirm("คุณต้องการออกจากระบบการบันทึกสถิตินี้ใช่หรือไม่?")) {
+    if (confirm("คุณต้องการออกจากระบบการบันทึกสถิติตี้ใช่หรือไม่?")) {
         auth.signOut().then(() => {
             alert("🔒 ออกจากระบบเรียบร้อยแล้ว");
             document.getElementById('login-form').reset();
@@ -72,7 +74,7 @@ function handleLogout() {
 }
 
 // =========================================================
-// 3. ข้อมูลตั้งต้นและระบบสร้างตาราง (ล็อกจำนวนนักเรียนชาย-หญิง เป็นค่าคงที่)
+// 3. ข้อมูลตั้งต้นและระบบสร้างตาราง (ล็อกจำนวนนักเรียนชาย-หญิง เป็นค่าคงที่สำรอง)
 // =========================================================
 const classesList = ['อ.1', 'อ.2', 'อ.3', 'ป.1', 'ป.2', 'ป.3', 'ป.4', 'ป.5', 'ป.6'];
 
@@ -104,7 +106,6 @@ function renderTable() {
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-50/50 dark:hover:bg-slate-700/30 transition-colors';
         
-        // 🛠️ ส่วนปรับปรุง: เพิ่มช่อง male-present และ female-present (มีค่าว่าง) และให้ช่อง present-input คำนวณบวกรวมอัตโนมัติ (readonly)
         tr.innerHTML = `
             <td class="p-4 font-bold text-slate-700 dark:text-slate-200">${cls}</td>
             <td class="p-4"><input type="number" value="${defaultData.male}" readonly class="w-16 bg-transparent text-center outline-none font-medium text-slate-500 dark:text-slate-400 cursor-not-allowed male-input"></td>
@@ -127,7 +128,6 @@ function renderTable() {
             const female = parseInt(row.querySelector('.female-input').value) || 0;
             const total = male + female;
 
-            // 🛠️ ส่วนปรับปรุงคำนวณอัตโนมัติ: ดึงยอดจาก ชายมา และ หญิงมา ไปใส่ให้ช่องรวมรวมนักเรียนมาวันนี้
             const malePresent = row.querySelector('.male-present-input').value !== "" ? parseInt(row.querySelector('.male-present-input').value) || 0 : null;
             const femalePresent = row.querySelector('.female-present-input').value !== "" ? parseInt(row.querySelector('.female-present-input').value) || 0 : null;
             
@@ -165,7 +165,6 @@ function fillAllPresent() {
         const male = parseInt(row.querySelector('.male-input').value) || 0;
         const female = parseInt(row.querySelector('.female-input').value) || 0;
         
-        // 🛠️ ส่วนปรับปรุง: เมื่อกดปุ่มมาครบ ให้กระจายลงช่องชายมา-หญิงมาตามยอดทั้งหมดให้ด้วย
         row.querySelector('.male-present-input').value = male;
         row.querySelector('.female-present-input').value = female;
         row.querySelector('.present-input').value = male + female;
@@ -220,7 +219,6 @@ function updateCalculations() {
     if (dashLeave) dashLeave.innerHTML = `${grandLeave} <span class="text-sm font-normal text-slate-400">คน</span>`;
     if (dashLate) dashLate.innerHTML = `${grandLate} <span class="text-sm font-normal text-slate-400">คน</span>`;
 
-    // อัปเดตหน้าตาแผนภูมิวงกลมตามตัวเลขชุดใหม่ล่าสุด
     updatePieChart(grandPresent, grandAbsent, grandLeave, grandLate);
 }
 
@@ -228,7 +226,6 @@ function updateCalculations() {
 // 5. ระบบบันทึกข้อมูลยิงขึ้นคลาวด์ออนไลน์ + ดีดรายงานเข้า LINE Bot
 // =========================================================
 function saveAttendanceData() {
-    // ป้องกันกรณีที่กดปุ่มเซฟแต่ไม่มีเซสชันเข้าสู่ระบบไว้
     if (!currentUserEmail) {
         return alert("❌ ไม่สามารถบันทึกข้อมูลได้: สิทธิ์การล็อกอินหมดอายุหรือยังไม่ได้ลงชื่อเข้าใช้");
     }
@@ -236,30 +233,27 @@ function saveAttendanceData() {
     const targetDate = document.getElementById('record-date').value;
     if (!targetDate) return alert("กรุณาเลือกวันที่ก่อนบันทึกข้อมูลครับ");
 
-    // ⏳ [ระบบเพิ่มใหม่]: ตรวจสอบสิทธิ์การกดซ้ำซ้อนภายในระยะเวลา 1 นาที (Cooldown 60 วินาที) แยกตามวันที่เลือก
     const currentTime = Date.now();
     const lastSaveTimestamp = localStorage.getItem(`cooldown_save_date_${targetDate}`);
-    const cooldownPeriod = 60 * 1000; // 1 นาที ในรูปแบบมิลลิวินาที
+    const cooldownPeriod = 60 * 1000; 
 
     if (lastSaveTimestamp) {
         const timeElapsed = currentTime - parseInt(lastSaveTimestamp);
         if (timeElapsed < cooldownPeriod) {
             const secondsRemaining = Math.ceil((cooldownPeriod - timeElapsed) / 1000);
-            // แสดงหน้าต่างข้อความขนาดใหญ่แจ้งเตือนอย่างเด่นชัด
             alert(`⚠️ คุณได้กดบันทึกข้อมูลลงระบบคลาวด์เรียบร้อยแล้ว\nจะกดบันทึกได้อีกครั้งในอีก ${secondsRemaining} วินาที`);
-            return; // ล็อกและตัดกระบวนการทันทีเพื่อไม่ให้ Firebase บันทึกซ้ำ และ LINE ไม่แจ้งเตือนซ้ำ
+            return; 
         }
     }
 
-    // รับข้อมูลจากช่องหมายเหตุประจำวัน
     const dailyNote = document.getElementById('daily-note').value;
 
     const attendancePayload = {
         date: targetDate,
-        submittedBy: currentUserEmail, // บันทึกอีเมลครูผู้กดส่งข้อมูลอัตโนมัติ
-        dailyNote: dailyNote || "",     // เก็บข้อมูลช่องหมายเหตุประจำวันลงระบบ
+        submittedBy: currentUserEmail, 
+        dailyNote: dailyNote || "",     
         classes: {},
-        updatedAt: firebase.firestore.FieldValue.serverTimestamp() // ใส่ Timestamp เวลาเซฟจริง
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp() 
     };
 
     let totalStudents = 0, present = 0, absent = 0, leave = 0, late = 0;
@@ -270,7 +264,6 @@ function saveAttendanceData() {
         const male = parseInt(row.querySelector('.male-input').value) || 0;
         const female = parseInt(row.querySelector('.female-input').value) || 0;
         
-        // 🛠️ ส่วนปรับปรุง payload: ดึงค่าชายมา-หญิงมาเพิ่มเข้าไปในก้อนชุดข้อมูลเก็บลงคลาวด์
         const malePresent = row.querySelector('.male-present-input').value !== "" ? parseInt(row.querySelector('.male-present-input').value) || 0 : "";
         const femalePresent = row.querySelector('.female-present-input').value !== "" ? parseInt(row.querySelector('.female-present-input').value) || 0 : "";
         
@@ -308,17 +301,15 @@ function saveAttendanceData() {
 
     db.collection("attendance").doc(targetDate).set(attendancePayload)
         .then(() => {
-            // 💾 บันทึกเวลาปัจจุบันลงในความจำเครื่องสำเร็จเพื่อตั้ง Cooldown ล็อกการทำงานซ้ำใน 1 นาที
             localStorage.setItem(`cooldown_save_date_${targetDate}`, Date.now().toString());
 
             alert(`🎉 สำเร็จ! บันทึกข้อมูลของวันที่ ${targetDate} โดยครูผู้ดูแล (${currentUserEmail}) เข้าสู่คลาวด์แล้ว\n🚀 ระบบกำลังส่งรายงานเข้า LINE Bot อัตโนมัติ...`);
             
-            // 🌐 เชื่อมต่อสะพานข้อมูล Google Apps Script Webhook API ของคุณครู
             const scriptUrl = "https://script.google.com/macros/s/AKfycbzOscwe8dGsjsljxKYqJy-cE0ikaWryIm6ASr1FJohOgVrdsCOAFF7gofSuZo1tQdh4/exec";
             
             return fetch(scriptUrl, {
                 method: 'POST',
-                mode: 'no-cors', // สั่ง Bypass ปัญหา CORS ทะลุกำแพงเบราว์เซอร์อย่างปลอดภัย
+                mode: 'no-cors', 
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(attendancePayload)
             });
@@ -352,7 +343,6 @@ function loadAttendanceData() {
                 const savedData = doc.data();
                 console.log(`📥 เจอข้อมูลเก่าของวันที่ ${targetDate}:`, savedData);
                 
-                // แสดงข้อความหมายเหตุที่บันทึกไว้คืนมาที่ฟิลด์อินพุต
                 if (dailyNoteInput) {
                     dailyNoteInput.value = savedData.dailyNote || '';
                 }
@@ -362,7 +352,6 @@ function loadAttendanceData() {
                     const className = row.cells[0].innerText;
                     const classData = savedData.classes ? savedData.classes[className] : null;
                     if (classData) {
-                        // 🛠 *ส่วนที่แก้ไขเพิ่มเติม*: ดึงค่า ชายมา-หญิงมา กลับมาแสดงผลคืนบนตารางกรณีมีข้อมูลเก่า
                         row.querySelector('.male-input').value = classData.male;
                         row.querySelector('.female-input').value = classData.female;
                         row.querySelector('.male-present-input').value = (classData.malePresent !== undefined) ? classData.malePresent : "";
@@ -374,16 +363,15 @@ function loadAttendanceData() {
                     }
                 });
             } else {
-                // หากไม่เจอข้อมูลเดิมของวันนั้นๆ ให้เคลียร์ข้อมูลเป็นค่าดีฟอลต์ทั้งหมด
                 if (dailyNoteInput) dailyNoteInput.value = '';
                 const rows = document.querySelectorAll('#table-body tr');
                 rows.forEach(row => {
                     const className = row.cells[0].innerText;
-                    const defaultData = defaultStudentsData[className] || { male: 0, female: 0 };
-                    row.querySelector('.male-input').value = defaultData.male;
-                    row.querySelector('.female-input').value = defaultData.female;
+                    // เติมการตรวจเช็ค ยึดโยงตามข้อมูล defaultStudentsData ชุดล่าสุดในเครื่องเสมอ
+                    const currentSetupData = defaultStudentsData[className] || { male: 0, female: 0 };
+                    row.querySelector('.male-input').value = currentSetupData.male;
+                    row.querySelector('.female-input').value = currentSetupData.female;
                     
-                    // เคลียร์ค่าว่างในฟิลด์บันทึกมาเรียนชุดใหม่
                     row.querySelector('.male-present-input').value = "";
                     row.querySelector('.female-present-input').value = "";
                     row.querySelector('.present-input').value = "";
@@ -399,7 +387,6 @@ function loadAttendanceData() {
         });
 }
 
-// 🖨️ ฟังก์ชันเปิดหน้าต่างพิมพ์รายงาน
 function printReport() {
     window.print();
 }
@@ -413,16 +400,12 @@ function updatePieChart(present, absent, leave, late) {
 
     const ctx = canvasElement.getContext('2d');
     const chartData = [present, absent, leave, late];
-    
-    // ตรวจสอบความพร้อม หากมียอดรวมเป็น 0 ให้สร้างสัดส่วนจำลองเพื่อป้องกัน Chart.js Error หน้าจอค้าง
     const totalSignals = present + absent + leave + late;
 
     if (attendancePieChart) {
-        // หากเคยอินิทกราฟไว้แล้ว ให้สลับชุดตัวเลขเพื่อแอนิเมชันที่สวยงาม
         attendancePieChart.data.datasets[0].data = totalSignals === 0 ? [1, 0, 0, 0] : chartData;
         attendancePieChart.update();
     } else {
-        // ขั้นตอนการสร้าง Instance ใหม่ลงบน Context Canvas ครั้งแรก
         attendancePieChart = new Chart(ctx, {
             type: 'pie',
             data: {
@@ -430,10 +413,10 @@ function updatePieChart(present, absent, leave, late) {
                 datasets: [{
                     data: totalSignals === 0 ? [1, 0, 0, 0] : chartData,
                     backgroundColor: [
-                        'rgba(16, 185, 129, 0.85)', // Emerald 500
-                        'rgba(239, 68, 68, 0.85)',   // Rose 500
-                        'rgba(245, 158, 11, 0.85)',  // Amber 500
-                        'rgba(59, 130, 246, 0.85)'   // Blue 500
+                        'rgba(16, 185, 129, 0.85)', 
+                        'rgba(239, 68, 68, 0.85)',   
+                        'rgba(245, 158, 11, 0.85)',  
+                        'rgba(59, 130, 246, 0.85)'   
                     ],
                     borderColor: [
                         '#10b981', '#ef4444', '#f59e0b', '#3b82f6'
@@ -499,10 +482,8 @@ function exportMonthlyReportToExcel() {
                 monthlyRecords.push(doc.data());
             });
 
-            // จัดเรียงวันที่จากน้อยไปมาก
             monthlyRecords.sort((a, b) => a.date.localeCompare(b.date));
 
-            // โครงสร้างหัวรายงานตาราง Excel สไตล์มาตรฐานราชการไทย
             let excelTemplate = `
                 <html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:x="urn:schemas-microsoft-com:office:excel" xmlns="http://www.w3.org/TR/REC-html40">
                 <head>
@@ -541,7 +522,7 @@ function exportMonthlyReportToExcel() {
             monthlyRecords.forEach((record) => {
                 const sum = record.summary || { totalStudents: 0, present: 0, absent: 0, leave: 0, late: 0, percentage: 0 };
                 
-                grandTotalStudentsSum = sum.totalStudents; // คงที่ตามจำนวนเด็กรวม
+                grandTotalStudentsSum = sum.totalStudents; 
                 grandPresentAvgSum += sum.present;
                 grandAbsentAvgSum += sum.absent;
                 grandLeaveAvgSum += sum.leave;
@@ -561,7 +542,6 @@ function exportMonthlyReportToExcel() {
                 `;
             });
 
-            // คำนวณหาค่าเฉลี่ยสะสมประจำเดือนเพื่อปิดท้ายตารางให้สมบูรณ์
             grandPresentAvgSum = grandPresentAvgSum / totalDaysCount;
             grandAbsentAvgSum = grandAbsentAvgSum / totalDaysCount;
             grandLeaveAvgSum = grandLeaveAvgSum / totalDaysCount;
@@ -577,14 +557,13 @@ function exportMonthlyReportToExcel() {
                         <td>${grandLeaveAvgSum.toFixed(1)}</td>
                         <td>${grandLateAvgSum.toFixed(1)}</td>
                         <td style="color: #059669;">${totalPercentage}%</td>
-                        <td>สรุปข้อมูลจากคลาวด์รวม ${totalDaysCount} วันทำทำการ</td>
+                        <td>สรุปข้อมูลจากคลาวด์รวม ${totalDaysCount} วันทำการ</td>
                     </tr>
                 </table>
                 </body>
                 </html>
             `;
 
-            // 💾 กระบวนการทำ Data Stream ดาวน์โหลดไฟล์ออกไปนอกระบบคอมพิวเตอร์
             const blob = new Blob([excelTemplate], { type: "application/vnd.ms-excel;charset=utf-8;" });
             const link = document.createElement("a");
             const fileName = `รายงานสถิติมาเรียน_${month}_${year}.xls`;
@@ -607,5 +586,95 @@ function exportMonthlyReportToExcel() {
         });
 }
 
-// 🎬 เรียกการทำงานวาดตารางและเรนเดอร์ UI ทันทีที่เครื่องเบราว์เซอร์เปิดแอปสำเร็จ
+// =========================================================
+// 🟢 เมนูจัดการข้อมูลนักเรียนตั้งต้นผ่านหน้าเว็บ
+// =========================================================
+function openStudentMasterModal() {
+    const container = document.getElementById('student-master-form-container');
+    if (!container) return;
+    container.innerHTML = '';
+
+    classesList.forEach(cls => {
+        const currentData = defaultStudentsData[cls] || { male: 0, female: 0 };
+        const div = document.createElement('div');
+        div.className = 'p-3 bg-slate-50 dark:bg-slate-800/40 border border-slate-200/60 dark:border-slate-700/50 rounded-2xl space-y-2';
+        div.innerHTML = `
+            <span class="text-xs font-black text-slate-700 dark:text-slate-300">${cls}</span>
+            <div class="grid grid-cols-2 gap-2">
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 mb-1">ชายทั้งหมด</label>
+                    <input type="number" id="master-male-${cls}" value="${currentData.male}" min="0" required class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg py-1 px-2 text-center text-xs font-bold text-blue-500 outline-none focus:border-blue-500 shadow-sm">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-bold text-slate-400 mb-1">หญิงทั้งหมด</label>
+                    <input type="number" id="master-female-${cls}" value="${currentData.female}" min="0" required class="w-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg py-1 px-2 text-center text-xs font-bold text-pink-500 outline-none focus:border-pink-500 shadow-sm">
+                </div>
+            </div>
+        `;
+        container.appendChild(div);
+    });
+
+    document.getElementById('student-master-modal').classList.remove('hidden');
+}
+
+function closeStudentMasterModal() {
+    document.getElementById('student-master-modal').classList.add('hidden');
+}
+
+function saveStudentMasterData(e) {
+    e.preventDefault();
+    if (!currentUserEmail) return alert("❌ กรุณาเข้าสู่ระบบก่อนดำเนินการ");
+
+    const updatedMasterData = {};
+    classesList.forEach(cls => {
+        const m = parseInt(document.getElementById(`master-male-${cls}`).value) || 0;
+        const f = parseInt(document.getElementById(`master-female-${cls}`).value) || 0;
+        updatedMasterData[cls] = { male: m, female: f };
+    });
+
+    db.collection("attendance").doc("master_setup").set({
+        defaultStudentsData: updatedMasterData,
+        updatedBy: currentUserEmail,
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    })
+    .then(() => {
+        Object.assign(defaultStudentsData, updatedMasterData);
+        alert("🟢 บันทึกข้อมูลนักเรียนตั้งต้นขึ้นระบบคลาวด์ และนำไปใช้คำนวณแอปพลิเคชันเรียบร้อยครับ!");
+        closeStudentMasterModal();
+        renderTable(); 
+    })
+    .catch(err => {
+        console.error("Save Master Setup Error:", err);
+        alert("❌ ไม่สามารถบันทึกข้อมูลลงระบบคลาวด์ได้เนื่องจากสิทธิ์เข้าถึงพอร์ตความปลอดภัย");
+    });
+}
+
+function loadStudentMasterDataFromServer() {
+    // 🛡️ ป้องกันกรณี Auth State กะพริบ ตรวจสอบความปลอดภัยของสิทธิ์ก่อนร้องขอข้อมูลบน Firebase คลาวด์
+    if (!auth.currentUser) {
+        console.log("⚠️ รอกระบวนการเชื่อมต่อสิทธิ์สำเร็จก่อนเรียกอ่านฐานข้อมูล...");
+        renderTable();
+        return;
+    }
+
+    db.collection("attendance").doc("master_setup").get()
+        .then(doc => {
+            if (doc.exists) {
+                const cloudMaster = doc.data().defaultStudentsData;
+                if (cloudMaster) {
+                    Object.assign(defaultStudentsData, cloudMaster);
+                    console.log("☁️ Sync Master Data: ดึงยอดจำนวนนักเรียนปัจจุบันจากคลาวด์มาใช้งานสำเร็จ");
+                }
+            }
+            renderTable(); // วาดตารางข้อมูลนักเรียนเมื่อจัดสรรยอดจากคลาวด์เสร็จสิ้น
+            loadAttendanceData(); // ดึงสถิติรายวัน
+        })
+        .catch(err => {
+            console.error("Load Master Data Error (ใช้ค่าสแตนด์บายทดแทน):", err);
+            renderTable();
+            loadAttendanceData();
+        });
+}
+
+// 🎬 รันสแตนด์บายโครงสร้างตารางตอนเริ่มต้นเปิดแอปพลิเคชัน
 renderTable();
