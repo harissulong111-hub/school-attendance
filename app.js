@@ -93,7 +93,12 @@ const defaultStudentsData = {
 // ตัวแปรส่วนกลางสำหรับจัดเก็บ Instance ของกราฟวงกลม
 let attendancePieChart = null;
 
-document.getElementById('record-date').valueAsDate = new Date();
+// 🟢 [แก้ไขจุดนี้]: ตั้งค่าเริ่มต้นช่องปฏิทินให้เป็นวันที่ปัจจุบัน ณ เวลาไทยอย่างแม่นยำ (รูปแบบ YYYY-MM-DD)
+const nowThailand = new Date();
+const localYear = nowThailand.getFullYear();
+const localMonth = String(nowThailand.getMonth() + 1).padStart(2, '0');
+const localDay = String(nowThailand.getDate()).padStart(2, '0');
+document.getElementById('record-date').value = `${localYear}-${localMonth}-${localDay}`;
 
 function renderTable() {
     const tbody = document.getElementById('table-body');
