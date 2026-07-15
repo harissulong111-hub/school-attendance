@@ -34,7 +34,7 @@ auth.onAuthStateChanged((user) => {
         if (userNameBadge) userNameBadge.innerText = user.email; // แสดงอีเมลที่แถบบาร์บน
         console.log("🔒 ยืนยันตัวตนสำเร็จโดยบัญชี:", user.email);
         
-        // ⏳ [ปรับปรุงตรรกะใหม่]: หน่วงเวลารอการสิงสิทธิ์ความปลอดภัย (Auth Token) 300ms เพื่อป้องกันคลาวด์ปฏิเสธสิทธิ์
+        // ⏳ หน่วงเวลารอการสิงสิทธิ์ความปลอดภัย (Auth Token) 300ms เพื่อป้องกันคลาวด์ปฏิเสธสิทธิ์
         setTimeout(() => {
             loadStudentMasterDataFromServer();
         }, 300);
@@ -93,7 +93,7 @@ const defaultStudentsData = {
 // ตัวแปรส่วนกลางสำหรับจัดเก็บ Instance ของกราฟวงกลม
 let attendancePieChart = null;
 
-// 🟢 [แก้ไขจุดนี้]: ตั้งค่าเริ่มต้นช่องปฏิทินให้เป็นวันที่ปัจจุบัน ณ เวลาไทยอย่างแม่นยำ (รูปแบบ YYYY-MM-DD)
+// ตั้งค่าเริ่มต้นช่องปฏิทินให้เป็นวันที่ปัจจุบัน ณ เวลาไทยอย่างแม่นยำ (รูปแบบ YYYY-MM-DD)
 const nowThailand = new Date();
 const localYear = nowThailand.getFullYear();
 const localMonth = String(nowThailand.getMonth() + 1).padStart(2, '0');
@@ -308,19 +308,35 @@ function saveAttendanceData() {
         .then(() => {
             localStorage.setItem(`cooldown_save_date_${targetDate}`, Date.now().toString());
 
-            alert(`🎉 สำเร็จ! บันทึกข้อมูลของวันที่ ${targetDate} โดยครูผู้ดูแล (${currentUserEmail}) เข้าสู่คลาวด์แล้ว\n🚀 ระบบกำลังส่งรายงานเข้า LINE Bot อัตโนมัติ...`);
-            
-            const scriptUrl = "https://script.google.com/macros/s/AKfycbzOscwe8dGsjsljxKYqJy-cE0ikaWryIm6ASr1FJohOgVrdsCOAFF7gofSuZo1tQdh4/exec";
-            
-            return fetch(scriptUrl, {
-                method: 'POST',
-                mode: 'no-cors', 
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify(attendancePayload)
-            });
+            // 🟢 [เพิ่มเงื่อนไขตรวจสอบสำหรับส่ง LINE]: ค้นหาและตรวจสอบว่า วันที่เลือกในระบบ ตรงกับ วันที่ปัจจุบันของโลกจริงหรือไม่
+            const todayObj = new Date();
+            const todayYear = todayObj.getFullYear();
+            const todayMonth = String(todayObj.getMonth() + 1).padStart(2, '0');
+            const todayDay = String(todayObj.getDate()).padStart(2, '0');
+            const systemTodayStr = `${todayYear}-${todayMonth}-${todayDay}`;
+
+            if (targetDate === systemTodayStr) {
+                // กรณีที่เป็นวันปัจจุบัน -> ให้ทำงานส่งแจ้งเตือนเข้ากลุ่ม LINE บอทตามปกติ
+                alert(`🎉 สำเร็จ! บันทึกข้อมูลของวันที่ ${targetDate} โดยครูผู้ดูแล (${currentUserEmail}) เข้าสู่คลาวด์แล้ว\n🚀 ระบบกำลังส่งรายงานเข้า LINE Bot อัตโนมัติ...`);
+                
+                const scriptUrl = "https://script.google.com/macros/s/AKfycbzOscwe8dGsjsljxKYqJy-cE0ikaWryIm6ASr1FJohOgVrdsCOAFF7gofSuZo1tQdh4/exec";
+                
+                return fetch(scriptUrl, {
+                    method: 'POST',
+                    mode: 'no-cors', 
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(attendancePayload)
+                });
+            } else {
+                // กรณีเป็นการบันทึกข้อมูลย้อนหลัง -> แจ้งเตือนเซฟสำเร็จในคลาวด์ แต่จะระงับการยิง Webhook ไลน์
+                alert(`🎉 สำเร็จ! ระบบทำการบันทึกข้อมูลสถิติตย้อนหลังประจำวันที่ ${targetDate} ลงฐานข้อมูลคลาวด์เรียบร้อยแล้ว\nℹ️ (หมายเหตุ: ไม่มีการส่งแจ้งเตือนซ้ำเข้าแอพ LINE เนื่องจากเป็นการลงประวัติย้อนหลัง)`);
+                return null;
+            }
         })
-        .then(() => {
-            console.log("🔔 สัญญาณรายงานสถิติดีดผ่าน Webhook สู่ระบบกลุ่ม LINE สำเร็จเรียบร้อย!");
+        .then((res) => {
+            if (res !== null) {
+                console.log("🔔 สัญญาณรายงานสถิติดีดผ่าน Webhook สู่ระบบกลุ่ม LINE สำเร็จเรียบร้อย!");
+            }
         })
         .catch((error) => {
             console.error("เกิดข้อผิดพลาดในการบันทึก:", error);
@@ -372,7 +388,6 @@ function loadAttendanceData() {
                 const rows = document.querySelectorAll('#table-body tr');
                 rows.forEach(row => {
                     const className = row.cells[0].innerText;
-                    // เติมการตรวจเช็ค ยึดโยงตามข้อมูล defaultStudentsData ชุดล่าสุดในเครื่องเสมอ
                     const currentSetupData = defaultStudentsData[className] || { male: 0, female: 0 };
                     row.querySelector('.male-input').value = currentSetupData.male;
                     row.querySelector('.female-input').value = currentSetupData.female;
@@ -678,6 +693,116 @@ function loadStudentMasterDataFromServer() {
             console.error("Load Master Data Error (ใช้ค่าสแตนด์บายทดแทน):", err);
             renderTable();
             loadAttendanceData();
+        });
+}
+
+// =========================================================
+// 🟢 ดึงข้อมูลฐานข้อมูลคลาวด์แบบ Batch เพื่อจัดเรียงพิมพ์รายงาน PDF แยกหน้ากรณีพิมพ์ช่วงเวลาหลายๆ วัน
+// =========================================================
+function printBatchReportPDF() {
+    const start = document.getElementById('print-start-date').value;
+    const end = document.getElementById('print-end-date').value;
+    const originalDate = document.getElementById('record-date').value; // เซฟวันที่ปัจจุบันไว้ก่อนเปลี่ยน
+
+    if (!start || !end) {
+        alert("❌ กรุณาระบุเลือกช่วงวันที่เริ่มต้นและสิ้นสุดที่ต้องการพิมพ์รายงานให้ครบถ้วนก่อนครับ");
+        return;
+    }
+    if (new Date(start) > new Date(end)) {
+        alert("⚠️ วันที่เริ่มต้นห้ามมากกว่าวันที่สิ้นสุด กรุณาเลือกช่วงเวลาใหม่อีกครั้งครับ");
+        return;
+    }
+
+    alert("🔍 ระบบกำลังประมวลผลจัดหน้าพิมพ์รายงานแบบต่อเนื่อง กรุณารอสักครู่ครับ...");
+
+    db.collection("attendance")
+        .where("date", ">=", start)
+        .where("date", "<=", end)
+        .get()
+        .then(async (querySnapshot) => {
+            if (querySnapshot.empty) {
+                alert(`ℹ️ ไม่พบแฟ้มข้อมูลบันทึกสถิติใดๆ ในระบบช่วงวันที่ ${start} ถึง ${end}`);
+                return;
+            }
+
+            const records = [];
+            querySnapshot.forEach((doc) => records.push(doc.data()));
+            records.sort((a, b) => a.date.localeCompare(b.date));
+
+            const virtualDeck = document.getElementById('batch-print-virtual-deck');
+            const mainArea = document.getElementById('main-render-area');
+            virtualDeck.innerHTML = ''; // ล้างความจำเก่า
+
+            // วนลูปสลับกลไกกรอกข้อมูลใส่โครงตารางจริงเพื่อทำการโคลนแผ่นกระดาษ
+            for (let i = 0; i < records.length; i++) {
+                const data = records[i];
+                
+                // สลับค่าจำลองใส่หน้าจอหลักชั่วคราว
+                document.getElementById('record-date').value = data.date;
+                updateThaiDateDisplay(data.date);
+                if (document.getElementById('daily-note')) {
+                    document.getElementById('daily-note').value = data.dailyNote || '';
+                }
+
+                // สลับข้อมูลนักเรียนและสถิติรายชั้นเรียนลงหน้ากระดานหลัก
+                classesList.forEach(cls => {
+                    const classData = data.classes ? data.classes[cls] : null;
+                    const rows = document.querySelectorAll('#table-body tr');
+                    rows.forEach(row => {
+                        if (row.cells[0].innerText === cls) {
+                            if (classData) {
+                                row.querySelector('.male-input').value = classData.male;
+                                row.querySelector('.female-input').value = classData.female;
+                                row.querySelector('.male-present-input').value = (classData.malePresent !== undefined) ? classData.malePresent : "";
+                                row.querySelector('.female-present-input').value = (classData.femalePresent !== undefined) ? classData.femalePresent : "";
+                                row.querySelector('.present-input').value = classData.present;
+                                row.querySelector('.absent-input').value = classData.absent;
+                                row.querySelector('.leave-input').value = classData.leave;
+                                row.querySelector('.late-input').value = classData.late;
+                            }
+                        }
+                    });
+                });
+                
+                // สั่งคำนวณแดชบอร์ดสรุปยอดตัวเลขด้านบนใหม่
+                updateCalculations();
+
+                // โคลนนิ่งโครงสร้างหน้าจอหลักทั้งหมดออกมาเป็น 1 หน้ากระดาษ A4
+                const clonePage = mainArea.cloneNode(true);
+                clonePage.className = "batch-print-page";
+                
+                // ดึงค่าของฟิลด์อินพุตในแผ่นที่โคลนออกมาล็อคให้อยู่ตัวถาวรเวลาสั่งพิมพ์
+                const originalInputs = mainArea.querySelectorAll('input');
+                const clonedInputs = clonePage.querySelectorAll('input');
+                originalInputs.forEach((input, index) => {
+                    clonedInputs[index].value = input.value;
+                });
+
+                virtualDeck.appendChild(clonePage);
+            }
+
+            // สั่งซ่อนการแสดงผลหน้าหลักชั่วคราว และเปิดให้เลเยอร์โคลนปริ้นหลายแผ่นทำงานแทน
+            mainArea.style.display = 'none';
+            virtualDeck.classList.remove('hidden');
+
+            // สั่งพิมพ์หน้าจออย่างเป็นทางการ
+            window.print();
+
+            // คืนค่าระบบกลับสู่สภาวะปกติหลังจากพิมพ์งานเสร็จเรียบร้อย
+            setTimeout(() => {
+                virtualDeck.classList.add('hidden');
+                virtualDeck.innerHTML = '';
+                mainArea.style.display = 'block';
+                
+                // ดึงข้อมูลของวันที่เลือกค้างไว้ก่อนหน้านี้กลับมาแสดงผลเหมือนเดิม
+                document.getElementById('record-date').value = originalDate;
+                updateThaiDateDisplay(originalDate);
+                loadAttendanceData();
+            }, 1000);
+        })
+        .catch((error) => {
+            console.error("Batch Print Failure: ", error);
+            alert("❌ ระบบขัดข้อง: ไม่สามารถประมวลผลพิมพ์รายงานแบบช่วงเวลาได้");
         });
 }
 

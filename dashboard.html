@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
+    
+    <title>TV Dashboard - ระบบสถิติการมาเรียนโรงเรียนบ้านกาหยี</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800;900&family=Noto+Sans+Thai:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['"Plus Jakarta Sans"', 'Noto Sans Thai', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: '"Plus Jakarta Sans"', 'Noto Sans Thai', sans-serif;
+            background-color: #f8fafc;
+        }
+        .card-shadow {
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between p-6 bg-slate-50/50">
+
+    <!-- 🌐 ส่วนหัวบาร์ (Header) -->
+    <header class="w-full bg-white border-2 border-slate-200 rounded-[2rem] p-6 card-shadow flex flex-col lg:flex-row justify-between items-center gap-4 mb-6">
+        <div class="flex items-center space-x-4">
+            <div class="w-16 h-16 bg-gradient-to-tr from-blue-600 via-indigo-600 to-emerald-500 rounded-2xl flex items-center justify-center text-white shadow-md">
+                <i class="fa-solid fa-graduation-cap text-3xl"></i>
+            </div>
+            <div>
+                <h1 class="font-black text-3xl bg-gradient-to-r from-slate-900 via-blue-600 to-emerald-600 bg-clip-text text-transparent tracking-tight">ระบบสารสนเทศข้อมูลสถิติการมาเรียน</h1>
+                <p class="text-sm text-slate-400 font-extrabold tracking-widest uppercase mt-0.5">โรงเรียนบ้านกาหยี สพป.ปัตตานี เขต 1</p>
+            </div>
+        </div>
+        <!-- 🟢 1. ปรับปรุงขนาดฟอนต์วันที่ให้ใหญ่ขึ้นอย่างเด่นชัด (text-2xl md:text-3xl และ font-black) -->
+        <div class="flex items-center space-x-4 bg-blue-50/60 border-2 border-blue-100 px-8 py-4 rounded-2xl shadow-sm">
+            <i class="fa-solid fa-calendar-days text-blue-600 text-3xl"></i>
+            <span id="tv-thai-date" class="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">กำลังโหลดวันที่...</span>
+        </div>
+    </header>
+
+    <!-- 📊 ส่วนแสดงผลกระดานสถิติหลัก -->
+    <main class="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1">
+        
+        <!-- 🟢 2. กล่องจำนวนนักเรียนทั้งหมด (ปรับหัวข้อให้ใหญ่เห็นชัด text-2xl และ font-black) -->
+        <div class="bg-white rounded-[2.5rem] border-2 border-slate-200 p-8 card-shadow flex flex-col justify-between items-center text-center">
+            <div class="w-20 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-3xl shadow-sm mb-2"><i class="fa-solid fa-users"></i></div>
+            <div class="flex-1 flex flex-col justify-center">
+                <p class="text-2xl font-black text-slate-800 uppercase tracking-wide">จำนวนนักเรียนทั้งหมด</p>
+                <h2 class="text-8xl font-black text-blue-600 mt-4 tracking-tighter" id="tv-total-students">0</h2>
+            </div>
+            <span class="text-2xl font-black text-slate-400 mt-2">คน</span>
+        </div>
+
+        <!-- 🟢 3. กล่องมาเรียนวันนี้ (แก้หัวข้อเป็น มาเรียนวันนี้ (จำนวนคน) ขยายขนาดใหญ่เป็นพิเศษ text-2xl และ font-black) -->
+        <div class="bg-white rounded-[2.5rem] border-2 border-slate-200 p-8 card-shadow flex flex-col justify-between items-center text-center">
+            <div class="w-20 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-3xl shadow-sm mb-2"><i class="fa-solid fa-calendar-check"></i></div>
+            <div class="flex-1 flex flex-col justify-center">
+                <p class="text-2xl font-black text-slate-800 uppercase tracking-wide">มาเรียนวันนี้ (จำนวนคน)</p>
+                <h2 class="text-8xl font-black text-emerald-600 mt-4 tracking-tighter" id="tv-present-count-main">0</h2>
+            </div>
+            <span class="text-xl font-extrabold text-emerald-500 mt-2 bg-emerald-50 px-4 py-1 rounded-xl border border-emerald-200/50" id="tv-present-percentage">คิดเป็น 0%</span>
+        </div>
+
+        <!-- 🟢 4. กล่องขาดเรียน (ปรับหัวข้อให้ใหญ่เห็นชัด text-2xl และ font-black) -->
+        <div class="bg-white rounded-[2.5rem] border-2 border-slate-200 p-8 card-shadow flex flex-col justify-between items-center text-center">
+            <div class="w-20 h-16 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center text-3xl shadow-sm mb-2"><i class="fa-solid fa-user-xmark"></i></div>
+            <div class="flex-1 flex flex-col justify-center">
+                <p class="text-2xl font-black text-slate-800 uppercase tracking-wide">ขาดเรียน</p>
+                <h2 class="text-8xl font-black text-rose-500 mt-4 tracking-tighter" id="tv-absent-count">0</h2>
+            </div>
+            <span class="text-2xl font-black text-slate-400 mt-2">คน</span>
+        </div>
+
+        <!-- 5. แผงแสดงเมนูอาหารประจำวันขนาดใหญ่เด่นชัด -->
+        <div class="md:col-span-3 bg-white rounded-[2.5rem] border-2 border-slate-200 p-8 card-shadow flex flex-col md:flex-row items-center gap-8 bg-gradient-to-r from-white via-white to-blue-50/10 mt-2">
+            <div class="flex flex-col items-center text-center bg-amber-50 border border-amber-200 p-6 rounded-3xl w-full md:w-56 shrink-0 shadow-sm">
+                <div class="w-16 h-16 bg-amber-500 text-white rounded-2xl flex items-center justify-center text-3xl shadow-md mb-2">
+                    <i class="fa-solid fa-utensils"></i>
+                </div>
+                <span class="text-xl font-black text-amber-900 tracking-wide">เมนูอาหารวันนี้</span>
+                <span class="text-[10px] text-amber-500 font-bold uppercase tracking-widest mt-0.5">Bankayee Kitchen</span>
+            </div>
+            <div class="w-full text-center md:text-left flex flex-col justify-center">
+                <h3 id="tv-daily-food" class="text-3xl md:text-4xl font-extrabold text-slate-800 leading-snug tracking-tight">
+                    กำลังดึงข้อมูลเมนูอาหารประจำวัน...
+                </h3>
+            </div>
+        </div>
+    </main>
+
+    <!-- 📊 ส่วนเครดิตท้ายเว็บ -->
+    <footer class="bg-white/60 border border-slate-200/80 py-4 px-8 rounded-2xl card-shadow text-xs font-semibold text-slate-400 mt-6 flex flex-col sm:flex-row items-center justify-between gap-3 font-medium">
+        <p>© 2026 โรงเรียนบ้านกาหยี สพป.ปัตตานี เขต 1. All Rights Reserved.</p>
+        <div class="flex items-center gap-2 bg-slate-100 px-3.5 py-1.5 rounded-xl border border-slate-200 text-[11px]">
+            <span class="text-slate-400">System Developed by</span>
+            <span class="font-extrabold text-slate-700 flex items-center gap-1">
+                <i class="fa-solid fa-terminal text-blue-500 text-[10px]"></i> haris-sulong
+            </span>
+        </div>
+    </footer>
+
+    <!-- ⚡ ส่วนสคริปต์ดึงข้อมูลแบบเรียลไทม์ -->
+    <script>
+        const firebaseConfig = {
+          apiKey: "AIzaSyBZRq6svRTueE7vm1Nq_1HTc9XoF7md5dA",
+          authDomain: "school-attendance-system-bb6fd.firebaseapp.com",
+          projectId: "school-attendance-system-bb6fd",
+          storageBucket: "school-attendance-system-bb6fd.firebasestorage.app",
+          messagingSenderId: "759416871053",
+          appId: "1:759416871053:web:b35232dbe27a952df12ac4",
+          measurementId: "G-W4QSQND8KJ"
+        };
+
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+
+        function initCurrentThaiDate() {
+            const now = new Date();
+            const days = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
+            const months = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
+            
+            const txtDayName = days[now.getDay()];
+            const txtMonthName = months[now.getMonth()];
+            const thaiYear = now.getFullYear() + 543;
+            
+            document.getElementById('tv-thai-date').innerText = `วัน ${txtDayName} ที่ ${now.getDate()} เดือน ${txtMonthName} พ.ศ. ${thaiYear}`;
+            return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+        }
+
+        function listenToLiveStats() {
+            const todayStr = initCurrentThaiDate();
+
+            db.collection("attendance").doc(todayStr).onSnapshot((doc) => {
+                if (doc.exists) {
+                    const data = doc.data();
+                    const sum = data.summary || { totalStudents: 0, present: 0, absent: 0, percentage: 0 };
+                    
+                    // ปรับแต่งการกระจายตัวเลขลงกล่อง (เอาจำนวนคนขึ้นเป็นหลักตามเงื่อนไขใหม่)
+                    document.getElementById('tv-total-students').innerText = sum.totalStudents;
+                    document.getElementById('tv-present-count-main').innerText = sum.present;
+                    document.getElementById('tv-present-percentage').innerText = `คิดเป็น ${sum.percentage}%`;
+                    document.getElementById('tv-absent-count').innerText = sum.absent;
+                    
+                    if (data.dailyNote && data.dailyNote.trim() !== "") {
+                        document.getElementById('tv-daily-food').innerText = data.dailyNote;
+                    } else {
+                        document.getElementById('tv-daily-food').innerText = "ยังไม่มีข้อมูลเมนูอาหารประจำวันนี้";
+                    }
+                    console.log("☁️ Live Sync Success");
+                } else {
+                    document.getElementById('tv-total-students').innerText = "82";
+                    document.getElementById('tv-present-count-main').innerText = "0";
+                    document.getElementById('tv-present-percentage').innerText = "รอสรุปข้อมูล";
+                    document.getElementById('tv-absent-count').innerText = "0";
+                    document.getElementById('tv-daily-food').innerText = "คุณครูเวรยังไม่ได้ระบุเมนูอาหารประจำวันนี้ในระบบหลัก";
+                }
+            }, (error) => {
+                console.error("Firebase Live Connect Error: ", error);
+            });
+        }
+
+        listenToLiveStats();
+    </script>
+</body>
+</html>
