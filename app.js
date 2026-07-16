@@ -93,7 +93,7 @@ const defaultStudentsData = {
 // ตัวแปรส่วนกลางสำหรับจัดเก็บ Instance ของกราฟวงกลม
 let attendancePieChart = null;
 
-// ตั้งค่าเริ่มต้นช่องปฏิทินให้เป็นวันที่ปัจจุบัน ณ เวลาไทยอย่างแม่นยำ (รูปแบบ YYYY-MM-DD)
+// 🛠️ [แก้ไขจุดที่ 1]: ปรับตัวแปรตั้งค่าปฏิทินเริ่มต้นหน้าเว็บให้ใช้เลข 2 หลักมาตรฐาน (YYYY-MM-DD) เพื่อให้แมตช์กับฟังก์ชันบันทึกข้อมูล
 const nowThailand = new Date();
 const localYear = nowThailand.getFullYear();
 const localMonth = String(nowThailand.getMonth() + 1).padStart(2, '0');
@@ -308,7 +308,7 @@ function saveAttendanceData() {
         .then(() => {
             localStorage.setItem(`cooldown_save_date_${targetDate}`, Date.now().toString());
 
-            // 🟢 [เพิ่มเงื่อนไขตรวจสอบสำหรับส่ง LINE]: ค้นหาและตรวจสอบว่า วันที่เลือกในระบบ ตรงกับ วันที่ปัจจุบันของโลกจริงหรือไม่
+            // 🛠️ [แก้ไขจุดที่ 2]: ปรับฟอร์แมตเปรียบเทียบให้เป็นตัวเลข 2 หลักทั้งหมด (เสถียรและจับคู่วันที่ได้ตรงกันอย่างถูกต้องแน่นอน)
             const todayObj = new Date();
             const todayYear = todayObj.getFullYear();
             const todayMonth = String(todayObj.getMonth() + 1).padStart(2, '0');
@@ -670,7 +670,6 @@ function saveStudentMasterData(e) {
 }
 
 function loadStudentMasterDataFromServer() {
-    // 🛡️ ป้องกันกรณี Auth State กะพริบ ตรวจสอบความปลอดภัยของสิทธิ์ก่อนร้องขอข้อมูลบน Firebase คลาวด์
     if (!auth.currentUser) {
         console.log("⚠️ รอกระบวนการเชื่อมต่อสิทธิ์สำเร็จก่อนเรียกอ่านฐานข้อมูล...");
         renderTable();
@@ -686,8 +685,8 @@ function loadStudentMasterDataFromServer() {
                     console.log("☁️ Sync Master Data: ดึงยอดจำนวนนักเรียนปัจจุบันจากคลาวด์มาใช้งานสำเร็จ");
                 }
             }
-            renderTable(); // วาดตารางข้อมูลนักเรียนเมื่อจัดสรรยอดจากคลาวด์เสร็จสิ้น
-            loadAttendanceData(); // ดึงสถิติรายวัน
+            renderTable(); 
+            loadAttendanceData(); 
         })
         .catch(err => {
             console.error("Load Master Data Error (ใช้ค่าสแตนด์บายทดแทน):", err);
@@ -696,13 +695,11 @@ function loadStudentMasterDataFromServer() {
         });
 }
 
-// =========================================================
 // 🟢 ดึงข้อมูลฐานข้อมูลคลาวด์แบบ Batch เพื่อจัดเรียงพิมพ์รายงาน PDF แยกหน้ากรณีพิมพ์ช่วงเวลาหลายๆ วัน
-// =========================================================
 function printBatchReportPDF() {
     const start = document.getElementById('print-start-date').value;
     const end = document.getElementById('print-end-date').value;
-    const originalDate = document.getElementById('record-date').value; // เซฟวันที่ปัจจุบันไว้ก่อนเปลี่ยน
+    const originalDate = document.getElementById('record-date').value; 
 
     if (!start || !end) {
         alert("❌ กรุณาระบุเลือกช่วงวันที่เริ่มต้นและสิ้นสุดที่ต้องการพิมพ์รายงานให้ครบถ้วนก่อนครับ");
@@ -731,20 +728,17 @@ function printBatchReportPDF() {
 
             const virtualDeck = document.getElementById('batch-print-virtual-deck');
             const mainArea = document.getElementById('main-render-area');
-            virtualDeck.innerHTML = ''; // ล้างความจำเก่า
+            virtualDeck.innerHTML = ''; 
 
-            // วนลูปสลับกลไกกรอกข้อมูลใส่โครงตารางจริงเพื่อทำการโคลนแผ่นกระดาษ
             for (let i = 0; i < records.length; i++) {
                 const data = records[i];
                 
-                // สลับค่าจำลองใส่หน้าจอหลักชั่วคราว
                 document.getElementById('record-date').value = data.date;
                 updateThaiDateDisplay(data.date);
                 if (document.getElementById('daily-note')) {
                     document.getElementById('daily-note').value = data.dailyNote || '';
                 }
 
-                // สลับข้อมูลนักเรียนและสถิติรายชั้นเรียนลงหน้ากระดานหลัก
                 classesList.forEach(cls => {
                     const classData = data.classes ? data.classes[cls] : null;
                     const rows = document.querySelectorAll('#table-body tr');
@@ -764,14 +758,11 @@ function printBatchReportPDF() {
                     });
                 });
                 
-                // สั่งคำนวณแดชบอร์ดสรุปยอดตัวเลขด้านบนใหม่
                 updateCalculations();
 
-                // โคลนนิ่งโครงสร้างหน้าจอหลักทั้งหมดออกมาเป็น 1 หน้ากระดาษ A4
                 const clonePage = mainArea.cloneNode(true);
                 clonePage.className = "batch-print-page";
                 
-                // ดึงค่าของฟิลด์อินพุตในแผ่นที่โคลนออกมาล็อคให้อยู่ตัวถาวรเวลาสั่งพิมพ์
                 const originalInputs = mainArea.querySelectorAll('input');
                 const clonedInputs = clonePage.querySelectorAll('input');
                 originalInputs.forEach((input, index) => {
@@ -781,20 +772,16 @@ function printBatchReportPDF() {
                 virtualDeck.appendChild(clonePage);
             }
 
-            // สั่งซ่อนการแสดงผลหน้าหลักชั่วคราว และเปิดให้เลเยอร์โคลนปริ้นหลายแผ่นทำงานแทน
             mainArea.style.display = 'none';
             virtualDeck.classList.remove('hidden');
 
-            // สั่งพิมพ์หน้าจออย่างเป็นทางการ
             window.print();
 
-            // คืนค่าระบบกลับสู่สภาวะปกติหลังจากพิมพ์งานเสร็จเรียบร้อย
             setTimeout(() => {
                 virtualDeck.classList.add('hidden');
                 virtualDeck.innerHTML = '';
                 mainArea.style.display = 'block';
                 
-                // ดึงข้อมูลของวันที่เลือกค้างไว้ก่อนหน้านี้กลับมาแสดงผลเหมือนเดิม
                 document.getElementById('record-date').value = originalDate;
                 updateThaiDateDisplay(originalDate);
                 loadAttendanceData();
