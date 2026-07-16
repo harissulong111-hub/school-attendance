@@ -319,7 +319,7 @@ function saveAttendanceData() {
                 // กรณีที่เป็นวันปัจจุบัน -> ให้ทำงานส่งแจ้งเตือนเข้ากลุ่ม LINE บอทตามปกติ
                 alert(`🎉 สำเร็จ! บันทึกข้อมูลของวันที่ ${targetDate} โดยครูผู้ดูแล (${currentUserEmail}) เข้าสู่คลาวด์แล้ว\n🚀 ระบบกำลังส่งรายงานเข้า LINE Bot อัตโนมัติ...`);
                 
-                const scriptUrl = "https://script.google.com/macros/s/AKfycbzOscwe8dGsjsljxKYqJy-cE0ikaWryIm6ASr1FJohOgVrdsCOAFF7gofSuZo1tQdh4/exec";
+                const scriptUrl = "https://script.google.com/macros/s/AKfycbz3ZO2EYhEH8RzSxm_o5jL0lZcXQD-qM2Hm8kxBK_gHqTm4dQD_jynumuHs7YZ0H1F__w/exec";
                 
                 return fetch(scriptUrl, {
                     method: 'POST',
