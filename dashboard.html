@@ -30,11 +30,14 @@
         .card-shadow {
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.08);
         }
+        /* เอฟเฟกต์ไฟนีออนนุ่มนวลให้กับตัวเลขนาฬิกา */
+        .clock-glow {
+            text-shadow: 0 0 20px rgba(37, 99, 235, 0.15);
+        }
     </style>
 </head>
 <body class="min-h-screen flex flex-col justify-between p-6 bg-slate-50/50">
 
-    <!-- 🌐 ส่วนหัวบาร์ (Header) -->
     <header class="w-full bg-white border-2 border-slate-200 rounded-[2rem] p-6 card-shadow flex flex-col lg:flex-row justify-between items-center gap-4 mb-6">
         <div class="flex items-center space-x-4">
             <div class="w-16 h-16 bg-gradient-to-tr from-blue-600 via-indigo-600 to-emerald-500 rounded-2xl flex items-center justify-center text-white shadow-md">
@@ -45,17 +48,20 @@
                 <p class="text-sm text-slate-400 font-extrabold tracking-widest uppercase mt-0.5">โรงเรียนบ้านกาหยี สพป.ปัตตานี เขต 1</p>
             </div>
         </div>
-        <!-- 🟢 1. ปรับปรุงขนาดฟอนต์วันที่ให้ใหญ่ขึ้นอย่างเด่นชัด (text-2xl md:text-3xl และ font-black) -->
-        <div class="flex items-center space-x-4 bg-blue-50/60 border-2 border-blue-100 px-8 py-4 rounded-2xl shadow-sm">
-            <i class="fa-solid fa-calendar-days text-blue-600 text-3xl"></i>
-            <span id="tv-thai-date" class="text-2xl md:text-3xl font-black text-slate-900 tracking-tight">กำลังโหลดวันที่...</span>
+        
+        <div class="flex flex-col sm:flex-row items-center gap-4 bg-slate-900 text-white px-8 py-4 rounded-[1.5rem] shadow-lg border-2 border-slate-800">
+            <div class="flex items-center space-x-1 border-b sm:border-b-0 sm:border-r border-slate-700 pb-2 sm:pb-0 sm:pr-6 justify-center">
+                <i class="fa-regular fa-clock text-blue-400 text-3xl mr-2"></i>
+                <span id="tv-digital-clock" class="text-4xl md:text-5xl font-black text-blue-400 tracking-wider clock-glow">00:00:00</span>
+            </div>
+            <div class="flex items-center space-x-3 text-center sm:text-left">
+                <span id="tv-thai-date" class="text-xl md:text-2xl font-black tracking-tight text-slate-100">กำลังโหลดวันที่...</span>
+            </div>
         </div>
     </header>
 
-    <!-- 📊 ส่วนแสดงผลกระดานสถิติหลัก -->
     <main class="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1">
         
-        <!-- 🟢 2. กล่องจำนวนนักเรียนทั้งหมด (ปรับหัวข้อให้ใหญ่เห็นชัด text-2xl และ font-black) -->
         <div class="bg-white rounded-[2.5rem] border-2 border-slate-200 p-8 card-shadow flex flex-col justify-between items-center text-center">
             <div class="w-20 h-16 bg-blue-50 text-blue-600 rounded-2xl flex items-center justify-center text-3xl shadow-sm mb-2"><i class="fa-solid fa-users"></i></div>
             <div class="flex-1 flex flex-col justify-center">
@@ -65,7 +71,6 @@
             <span class="text-2xl font-black text-slate-400 mt-2">คน</span>
         </div>
 
-        <!-- 🟢 3. กล่องมาเรียนวันนี้ (แก้หัวข้อเป็น มาเรียนวันนี้ (จำนวนคน) ขยายขนาดใหญ่เป็นพิเศษ text-2xl และ font-black) -->
         <div class="bg-white rounded-[2.5rem] border-2 border-slate-200 p-8 card-shadow flex flex-col justify-between items-center text-center">
             <div class="w-20 h-16 bg-emerald-50 text-emerald-600 rounded-2xl flex items-center justify-center text-3xl shadow-sm mb-2"><i class="fa-solid fa-calendar-check"></i></div>
             <div class="flex-1 flex flex-col justify-center">
@@ -75,7 +80,6 @@
             <span class="text-xl font-extrabold text-emerald-500 mt-2 bg-emerald-50 px-4 py-1 rounded-xl border border-emerald-200/50" id="tv-present-percentage">คิดเป็น 0%</span>
         </div>
 
-        <!-- 🟢 4. กล่องขาดเรียน (ปรับหัวข้อให้ใหญ่เห็นชัด text-2xl และ font-black) -->
         <div class="bg-white rounded-[2.5rem] border-2 border-slate-200 p-8 card-shadow flex flex-col justify-between items-center text-center">
             <div class="w-20 h-16 bg-rose-50 text-rose-600 rounded-2xl flex items-center justify-center text-3xl shadow-sm mb-2"><i class="fa-solid fa-user-xmark"></i></div>
             <div class="flex-1 flex flex-col justify-center">
@@ -85,7 +89,6 @@
             <span class="text-2xl font-black text-slate-400 mt-2">คน</span>
         </div>
 
-        <!-- 5. แผงแสดงเมนูอาหารประจำวันขนาดใหญ่เด่นชัด -->
         <div class="md:col-span-3 bg-white rounded-[2.5rem] border-2 border-slate-200 p-8 card-shadow flex flex-col md:flex-row items-center gap-8 bg-gradient-to-r from-white via-white to-blue-50/10 mt-2">
             <div class="flex flex-col items-center text-center bg-amber-50 border border-amber-200 p-6 rounded-3xl w-full md:w-56 shrink-0 shadow-sm">
                 <div class="w-16 h-16 bg-amber-500 text-white rounded-2xl flex items-center justify-center text-3xl shadow-md mb-2">
@@ -102,7 +105,6 @@
         </div>
     </main>
 
-    <!-- 📊 ส่วนเครดิตท้ายเว็บ -->
     <footer class="bg-white/60 border border-slate-200/80 py-4 px-8 rounded-2xl card-shadow text-xs font-semibold text-slate-400 mt-6 flex flex-col sm:flex-row items-center justify-between gap-3 font-medium">
         <p>© 2026 โรงเรียนบ้านกาหยี สพป.ปัตตานี เขต 1. All Rights Reserved.</p>
         <div class="flex items-center gap-2 bg-slate-100 px-3.5 py-1.5 rounded-xl border border-slate-200 text-[11px]">
@@ -113,7 +115,6 @@
         </div>
     </footer>
 
-    <!-- ⚡ ส่วนสคริปต์ดึงข้อมูลแบบเรียลไทม์ -->
     <script>
         const firebaseConfig = {
           apiKey: "AIzaSyBZRq6svRTueE7vm1Nq_1HTc9XoF7md5dA",
@@ -128,28 +129,47 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.firestore();
 
-        function initCurrentThaiDate() {
-            const now = new Date();
+        // 🟢 ฟังก์ชันระบบนาฬิกาดิจิทัล และอัปเดตวันที่อัตโนมัติแบบ Real-time
+        function startDigitalClockAndDate() {
+            const clockEl = document.getElementById('tv-digital-clock');
+            const dateEl = document.getElementById('tv-tv-thai-date');
+            
             const days = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
             const months = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];
-            
-            const txtDayName = days[now.getDay()];
-            const txtMonthName = months[now.getMonth()];
-            const thaiYear = now.getFullYear() + 543;
-            
-            document.getElementById('tv-thai-date').innerText = `วัน ${txtDayName} ที่ ${now.getDate()} เดือน ${txtMonthName} พ.ศ. ${thaiYear}`;
+
+            function updateClock() {
+                const now = new Date();
+                
+                // 1. อัปเดตเวลาดิจิทัล (HH:MM:SS)
+                const hours = String(now.getHours()).padStart(2, '0');
+                const minutes = String(now.getMinutes()).padStart(2, '0');
+                const seconds = String(now.getSeconds()).padStart(2, '0');
+                clockEl.innerText = `${hours}:${minutes}:${seconds}`;
+                
+                // 2. อัปเดตข้อความวันที่ภาษาไทย
+                const txtDayName = days[now.getDay()];
+                const txtMonthName = months[now.getMonth()];
+                const thaiYear = now.getFullYear() + 543;
+                document.getElementById('tv-thai-date').innerText = `วัน ${txtDayName} ที่ ${now.getDate()} เดือน ${txtMonthName} พ.ศ. ${thaiYear}`;
+            }
+
+            setInterval(updateClock, 1000);
+            updateClock();
+        }
+
+        function getTodayDocString() {
+            const now = new Date();
             return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
         }
 
         function listenToLiveStats() {
-            const todayStr = initCurrentThaiDate();
+            const todayStr = getTodayDocString();
 
             db.collection("attendance").doc(todayStr).onSnapshot((doc) => {
                 if (doc.exists) {
                     const data = doc.data();
                     const sum = data.summary || { totalStudents: 0, present: 0, absent: 0, percentage: 0 };
                     
-                    // ปรับแต่งการกระจายตัวเลขลงกล่อง (เอาจำนวนคนขึ้นเป็นหลักตามเงื่อนไขใหม่)
                     document.getElementById('tv-total-students').innerText = sum.totalStudents;
                     document.getElementById('tv-present-count-main').innerText = sum.present;
                     document.getElementById('tv-present-percentage').innerText = `คิดเป็น ${sum.percentage}%`;
@@ -173,6 +193,8 @@
             });
         }
 
+        // สั่งทำงานระบบนาฬิกา และตัวดึงข้อมูลคลาวด์พร้อมกันเมื่อเปิดหน้าจอ
+        startDigitalClockAndDate();
         listenToLiveStats();
     </script>
 </body>
