@@ -11,12 +11,11 @@ const firebaseConfig = {
   measurementId: "G-W4QSQND8KJ"
 };
 
-// ตรวจสอบการ Initialize แอปพลิเคชันป้องกัน Error ซ้ำซ้อน
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
 const db = firebase.firestore(); 
-const auth = firebase.auth(); // 🔐 เรียกใช้งานโมดูลระบบยืนยันตัวตน
+const auth = firebase.auth();
 
 // =========================================================
 // 2. ระบบควบคุมสิทธิ์ผู้ใช้งาน (Firebase Auth State Observer)
@@ -28,26 +27,22 @@ auth.onAuthStateChanged((user) => {
     const userNameBadge = document.getElementById('current-user-name');
     
     if (user) {
-        // กรณีผู้ใช้งานล็อกอินสำเร็จ
         currentUserEmail = user.email;
-        if (loginOverlay) loginOverlay.classList.add('hidden'); // ซ่อนหน้าต่างล็อกอิน
-        if (userNameBadge) userNameBadge.innerText = user.email; // แสดงอีเมลที่แถบบาร์บน
+        if (loginOverlay) loginOverlay.classList.add('hidden');
+        if (userNameBadge) userNameBadge.innerText = user.email;
         console.log("🔒 ยืนยันตัวตนสำเร็จโดยบัญชี:", user.email);
         
-        // ⏳ หน่วงเวลารอการสิงสิทธิ์ความปลอดภัย (Auth Token) 300ms เพื่อป้องกันคลาวด์ปฏิเสธสิทธิ์
         setTimeout(() => {
             loadStudentMasterDataFromServer();
         }, 300);
     } else {
-        // กรณีไม่มีการเข้าสู่ระบบ หรือกด Logout ออกไป
         currentUserEmail = null;
-        if (loginOverlay) loginOverlay.classList.remove('hidden'); // ดึงหน้าต่างล็อกอินขึ้นมาบัง
+        if (loginOverlay) loginOverlay.classList.remove('hidden');
         if (userNameBadge) userNameBadge.innerText = "ไม่ได้เข้าสู่ระบบ";
         console.log("🔓 สถานะ: ไม่พบสิทธิ์เข้าใช้งานระบบ (กรุณาล็อกอิน)");
     }
 });
 
-// ฟังก์ชันสำหรับส่งคำขอตรวจสอบสิทธิ์ (Login)
 function handleLogin(e) {
     e.preventDefault();
     const email = document.getElementById('login-email').value;
@@ -63,7 +58,6 @@ function handleLogin(e) {
         });
 }
 
-// ฟังก์ชันออกจากระบบ (Logout)
 function handleLogout() {
     if (confirm("คุณต้องการออกจากระบบการบันทึกสถิติตี้ใช่หรือไม่?")) {
         auth.signOut().then(() => {
@@ -74,7 +68,7 @@ function handleLogout() {
 }
 
 // =========================================================
-// 3. ข้อมูลตั้งต้นและระบบสร้างตาราง (ล็อกจำนวนนักเรียนชาย-หญิง เป็นค่าคงที่สำรอง)
+// 3. ข้อมูลตั้งต้นและระบบสร้างตาราง 
 // =========================================================
 const classesList = ['อ.1', 'อ.2', 'อ.3', 'ป.1', 'ป.2', 'ป.3', 'ป.4', 'ป.5', 'ป.6'];
 
@@ -90,10 +84,8 @@ const defaultStudentsData = {
   'ป.6': { male: 6, female: 7 }
 };
 
-// ตัวแปรส่วนกลางสำหรับจัดเก็บ Instance ของกราฟวงกลม
 let attendancePieChart = null;
 
-// 🛠️ [แก้ไขจุดที่ 1]: ปรับตัวแปรตั้งค่าปฏิทินเริ่มต้นหน้าเว็บให้ใช้เลข 2 หลักมาตรฐาน (YYYY-MM-DD) เพื่อให้แมตช์กับฟังก์ชันบันทึกข้อมูล
 const nowThailand = new Date();
 const localYear = nowThailand.getFullYear();
 const localMonth = String(nowThailand.getMonth() + 1).padStart(2, '0');
@@ -107,56 +99,86 @@ function renderTable() {
 
     classesList.forEach((cls) => {
         const defaultData = defaultStudentsData[cls] || { male: 0, female: 0 };
+        const totalDefault = defaultData.male + defaultData.female;
 
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-slate-50/50 dark:hover:bg-slate-700/30 transition-colors';
         
         tr.innerHTML = `
-            <td class="p-4 font-bold text-slate-700 dark:text-slate-200">${cls}</td>
-            <td class="p-4"><input type="number" value="${defaultData.male}" readonly class="w-16 bg-transparent text-center outline-none font-medium text-slate-500 dark:text-slate-400 cursor-not-allowed male-input"></td>
-            <td class="p-4"><input type="number" value="${defaultData.female}" readonly class="w-16 bg-transparent text-center outline-none font-medium text-slate-500 dark:text-slate-400 cursor-not-allowed female-input"></td>
-            <td class="p-4"><input type="number" value="" placeholder="ว่าง" class="w-16 bg-blue-500/10 text-blue-500 border border-blue-500/30 rounded text-center font-bold male-present-input"></td>
-            <td class="p-4"><input type="number" value="" placeholder="ว่าง" class="w-16 bg-pink-500/10 text-pink-500 border border-pink-500/30 rounded text-center font-bold female-present-input"></td>
-            <td class="p-4"><input type="number" value="" placeholder="0" readonly class="w-16 bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 rounded text-center font-bold present-input cursor-not-allowed"></td>
-            <td class="p-4"><input type="number" value="0" class="w-16 bg-rose-500/10 text-rose-500 border border-rose-500/30 rounded text-center absent-input"></td>
-            <td class="p-4"><input type="number" value="0" class="w-16 bg-amber-500/10 text-amber-500 border border-amber-500/30 rounded text-center leave-input"></td>
-            <td class="p-4"><input type="number" value="0" class="w-16 bg-blue-500/10 text-blue-500 border border-blue-500/30 rounded text-center late-input"></td>
+            <td class="p-4 font-bold text-slate-700 dark:text-slate-200 text-center class-name-td">${cls}</td>
+            <td class="p-4 text-center"><input type="number" value="${defaultData.male}" readonly class="w-16 bg-transparent text-center outline-none font-medium text-slate-500 dark:text-slate-400 cursor-not-allowed male-input"></td>
+            <td class="p-4 text-center"><input type="number" value="${defaultData.female}" readonly class="w-16 bg-transparent text-center outline-none font-medium text-slate-500 dark:text-slate-400 cursor-not-allowed female-input"></td>
+            <td class="p-4 text-center"><input type="number" value="${totalDefault}" readonly class="w-16 bg-transparent text-center outline-none font-bold text-slate-500 dark:text-slate-400 cursor-not-allowed total-input"></td>
+            
+            <td class="p-4 text-center"><input type="number" value="" placeholder="ว่าง" class="w-16 bg-blue-500/10 text-blue-500 border border-blue-500/30 rounded text-center font-bold male-present-input"></td>
+            <td class="p-4 text-center"><input type="number" value="" placeholder="ว่าง" class="w-16 bg-pink-500/10 text-pink-500 border border-pink-500/30 rounded text-center font-bold female-present-input"></td>
+            <td class="p-4 text-center"><input type="number" value="" placeholder="0" readonly class="w-16 bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 rounded text-center font-bold present-input cursor-not-allowed"></td>
+            
+            <td class="p-4 text-center"><input type="number" value="0" readonly class="w-16 bg-rose-500/10 text-rose-500 border border-rose-500/30 rounded text-center font-bold male-absent-input cursor-not-allowed"></td>
+            <td class="p-4 text-center"><input type="number" value="0" readonly class="w-16 bg-rose-500/10 text-rose-500 border border-rose-500/30 rounded text-center font-bold female-absent-input cursor-not-allowed"></td>
+            <td class="p-4 text-center"><input type="number" value="0" readonly class="w-16 bg-rose-500/10 text-rose-500 border border-rose-500/30 rounded text-center font-bold absent-input cursor-not-allowed"></td>
+            
             <td class="p-4 text-right font-bold text-emerald-500 class-percentage">0.00%</td>
         `;
         tbody.appendChild(tr);
     });
+
+    // 1. เพิ่มแถว "รวม" อัตโนมัติท้ายตารางรายชั้นเรียนบนหน้าเว็บ
+    const totalTr = document.createElement('tr');
+    totalTr.id = 'web-total-row';
+    totalTr.className = 'bg-slate-100/60 dark:bg-slate-800/60 font-bold';
+    totalTr.innerHTML = `
+        <td class="p-4 text-center text-slate-900 dark:text-white font-black">รวม</td>
+        <td class="p-4 text-center"><span id="sum-male">0</span></td>
+        <td class="p-4 text-center"><span id="sum-female">0</span></td>
+        <td class="p-4 text-center"><span id="sum-total">0</span></td>
+        <td class="p-4 text-center text-blue-500"><span id="sum-male-present">0</span></td>
+        <td class="p-4 text-center text-pink-500"><span id="sum-female-present">0</span></td>
+        <td class="p-4 text-center text-emerald-500"><span id="sum-present">0</span></td>
+        <td class="p-4 text-center text-rose-500"><span id="sum-male-absent">0</span></td>
+        <td class="p-4 text-center text-rose-500"><span id="sum-female-absent">0</span></td>
+        <td class="p-4 text-center text-rose-500"><span id="sum-absent">0</span></td>
+        <td class="p-4 text-right text-emerald-500" id="sum-percentage">0.00%</td>
+    `;
+    tbody.appendChild(totalTr);
 
     document.querySelectorAll('#table-body input').forEach(input => {
         input.addEventListener('input', (e) => {
             const row = e.target.closest('tr');
             const male = parseInt(row.querySelector('.male-input').value) || 0;
             const female = parseInt(row.querySelector('.female-input').value) || 0;
-            const total = male + female;
 
-            const malePresent = row.querySelector('.male-present-input').value !== "" ? parseInt(row.querySelector('.male-present-input').value) || 0 : null;
-            const femalePresent = row.querySelector('.female-present-input').value !== "" ? parseInt(row.querySelector('.female-present-input').value) || 0 : null;
+            const malePresentInput = row.querySelector('.male-present-input').value;
+            const femalePresentInput = row.querySelector('.female-present-input').value;
+
+            const malePresent = malePresentInput !== "" ? parseInt(malePresentInput) || 0 : null;
+            const femalePresent = femalePresentInput !== "" ? parseInt(femalePresentInput) || 0 : null;
             
+            if (malePresent !== null) {
+                let mAbsent = male - malePresent;
+                row.querySelector('.male-absent-input').value = mAbsent < 0 ? 0 : mAbsent;
+            } else {
+                row.querySelector('.male-absent-input').value = 0;
+            }
+
+            if (femalePresent !== null) {
+                let fAbsent = female - femalePresent;
+                row.querySelector('.female-absent-input').value = fAbsent < 0 ? 0 : fAbsent;
+            } else {
+                row.querySelector('.female-absent-input').value = 0;
+            }
+
             if (malePresent !== null || femalePresent !== null) {
                 const calculatedSum = (malePresent || 0) + (femalePresent || 0);
                 row.querySelector('.present-input').value = calculatedSum;
                 
-                let calculatedAbsent = total - calculatedSum;
-                row.querySelector('.absent-input').value = calculatedAbsent < 0 ? 0 : calculatedAbsent;
+                const totalAbsent = (parseInt(row.querySelector('.male-absent-input').value) || 0) + (parseInt(row.querySelector('.female-absent-input').value) || 0);
+                row.querySelector('.absent-input').value = totalAbsent;
             } else {
                 row.querySelector('.present-input').value = "";
-                row.querySelector('.absent-input').value = "";
+                row.querySelector('.absent-input').value = 0;
             }
 
-            if (e.target.classList.contains('absent-input') || e.target.classList.contains('leave-input')) {
-                const absent = parseInt(row.querySelector('.absent-input').value) || 0;
-                const leave = parseInt(row.querySelector('.leave-input').value) || 0;
-                const currentPresent = row.querySelector('.present-input').value;
-
-                if (currentPresent !== "") {
-                    let calculatedPresent = total - absent - leave;
-                    row.querySelector('.present-input').value = calculatedPresent < 0 ? 0 : calculatedPresent;
-                }
-            }
             updateCalculations();
         });
     });
@@ -167,15 +189,16 @@ function renderTable() {
 function fillAllPresent() {
     const rows = document.querySelectorAll('#table-body tr');
     rows.forEach(row => {
+        if (row.id === 'web-total-row' || row.id === 'print-extra-row') return;
         const male = parseInt(row.querySelector('.male-input').value) || 0;
         const female = parseInt(row.querySelector('.female-input').value) || 0;
         
         row.querySelector('.male-present-input').value = male;
         row.querySelector('.female-present-input').value = female;
+        row.querySelector('.male-absent-input').value = 0;
+        row.querySelector('.female-absent-input').value = 0;
         row.querySelector('.present-input').value = male + female;
         row.querySelector('.absent-input').value = 0;
-        row.querySelector('.leave-input').value = 0;
-        row.querySelector('.late-input').value = 0;
     });
     updateCalculations();
 }
@@ -185,46 +208,78 @@ function fillAllPresent() {
 // =========================================================
 function updateCalculations() {
     let grandTotalStudents = 0;
+    let grandTotalMale = 0;
+    let grandTotalFemale = 0;
     let grandPresent = 0;
     let grandAbsent = 0;
-    let grandLeave = 0;
-    let grandLate = 0;
+    let grandMaleAbsent = 0;
+    let grandFemaleAbsent = 0;
+    let grandMalePresent = 0;
+    let grandFemalePresent = 0;
 
     const rows = document.querySelectorAll('#table-body tr');
     rows.forEach(row => {
+        if (row.id === 'web-total-row' || row.id === 'print-extra-row') return;
         const male = parseInt(row.querySelector('.male-input').value) || 0;
         const female = parseInt(row.querySelector('.female-input').value) || 0;
         const present = parseInt(row.querySelector('.present-input').value) || 0;
         const absent = parseInt(row.querySelector('.absent-input').value) || 0;
-        const leave = parseInt(row.querySelector('.leave-input').value) || 0;
-        const late = parseInt(row.querySelector('.late-input').value) || 0;
+        const maleAbsent = parseInt(row.querySelector('.male-absent-input').value) || 0;
+        const femaleAbsent = parseInt(row.querySelector('.female-absent-input').value) || 0;
+        
+        const malePresent = parseInt(row.querySelector('.male-present-input').value) || 0;
+        const femalePresent = parseInt(row.querySelector('.female-present-input').value) || 0;
 
         const totalClassStudents = male + female;
         grandTotalStudents += totalClassStudents;
+        grandTotalMale += male;
+        grandTotalFemale += female;
         grandPresent += present;
         grandAbsent += absent;
-        grandLeave += leave;
-        grandLate += late;
+        grandMaleAbsent += maleAbsent;
+        grandFemaleAbsent += femaleAbsent;
+        grandMalePresent += malePresent;
+        grandFemalePresent += femalePresent;
 
         const classPercent = totalClassStudents > 0 ? ((present / totalClassStudents) * 100).toFixed(2) : "0.00";
-        row.querySelector('.class-percentage').innerText = `${classPercent}%`;
+        const targetPercentEl = row.querySelector('.class-percentage');
+        if (targetPercentEl) targetPercentEl.innerText = `${classPercent}%`;
     });
+
+    // อัปเดตตัวเลขแถว "รวม" ท้ายตารางอัตโนมัติ
+    if (document.getElementById('web-total-row')) {
+        document.getElementById('sum-male').innerText = grandTotalMale;
+        document.getElementById('sum-female').innerText = grandTotalFemale;
+        document.getElementById('sum-total').innerText = grandTotalStudents;
+        document.getElementById('sum-male-present').innerText = grandMalePresent;
+        document.getElementById('sum-female-present').innerText = grandFemalePresent;
+        document.getElementById('sum-present').innerText = grandPresent;
+        document.getElementById('sum-male-absent').innerText = grandMaleAbsent;
+        document.getElementById('sum-female-absent').innerText = grandFemaleAbsent;
+        document.getElementById('sum-absent').innerText = grandAbsent;
+        const totalPercentage = grandTotalStudents > 0 ? ((grandPresent / grandTotalStudents) * 100).toFixed(2) : "0.00";
+        document.getElementById('sum-percentage').innerText = `${totalPercentage}%`;
+    }
 
     const dashTotal = document.getElementById('dash-total');
     const dashPresent = document.getElementById('dash-present');
     const dashAbsent = document.getElementById('dash-absent');
-    const dashLeave = document.getElementById('dash-leave');
-    const dashLate = document.getElementById('dash-late');
+    const dashMaleAbsent = document.getElementById('dash-male-absent');
+    const dashFemaleAbsent = document.getElementById('dash-female-absent');
 
     if (dashTotal) dashTotal.innerHTML = `${grandTotalStudents} <span class="text-sm font-normal text-slate-400">คน</span>`;
     
     const totalPercentage = grandTotalStudents > 0 ? ((grandPresent / grandTotalStudents) * 100).toFixed(2) : "0.00";
     if (dashPresent) dashPresent.innerHTML = `${grandPresent} <span class="text-xs font-normal text-emerald-400">(${totalPercentage}%)</span>`;
     if (dashAbsent) dashAbsent.innerHTML = `${grandAbsent} <span class="text-sm font-normal text-slate-400">คน</span>`;
-    if (dashLeave) dashLeave.innerHTML = `${grandLeave} <span class="text-sm font-normal text-slate-400">คน</span>`;
-    if (dashLate) dashLate.innerHTML = `${grandLate} <span class="text-sm font-normal text-slate-400">คน</span>`;
+    
+    const maleAbsentPercent = grandTotalMale > 0 ? ((grandMaleAbsent / grandTotalMale) * 100).toFixed(2) : "0.00";
+    const femaleAbsentPercent = grandTotalFemale > 0 ? ((grandFemaleAbsent / grandTotalFemale) * 100).toFixed(2) : "0.00";
+    
+    if (dashMaleAbsent) dashMaleAbsent.innerHTML = `${grandMaleAbsent} <span class="text-xs font-normal text-rose-400">(${maleAbsentPercent}%)</span>`;
+    if (dashFemaleAbsent) dashFemaleAbsent.innerHTML = `${grandFemaleAbsent} <span class="text-xs font-normal text-pink-400">(${femaleAbsentPercent}%)</span>`;
 
-    updatePieChart(grandPresent, grandAbsent, grandLeave, grandLate);
+    updatePieChart(grandPresent, grandAbsent, 0, 0);
 }
 
 // =========================================================
@@ -261,11 +316,12 @@ function saveAttendanceData() {
         updatedAt: firebase.firestore.FieldValue.serverTimestamp() 
     };
 
-    let totalStudents = 0, present = 0, absent = 0, leave = 0, late = 0;
+    let totalStudents = 0, present = 0, absent = 0;
 
     const rows = document.querySelectorAll('#table-body tr');
     rows.forEach(row => {
-        const className = row.cells[0].innerText;
+        if (row.id === 'web-total-row' || row.id === 'print-extra-row') return;
+        const className = row.querySelector('.class-name-td').innerText;
         const male = parseInt(row.querySelector('.male-input').value) || 0;
         const female = parseInt(row.querySelector('.female-input').value) || 0;
         
@@ -274,14 +330,10 @@ function saveAttendanceData() {
         
         const p = parseInt(row.querySelector('.present-input').value) || 0;
         const ab = parseInt(row.querySelector('.absent-input').value) || 0;
-        const lv = parseInt(row.querySelector('.leave-input').value) || 0;
-        const lt = parseInt(row.querySelector('.late-input').value) || 0;
 
         totalStudents += (male + female);
         present += p;
         absent += ab;
-        leave += lv;
-        late += lt;
 
         attendancePayload.classes[className] = { 
             male, 
@@ -289,9 +341,9 @@ function saveAttendanceData() {
             malePresent, 
             femalePresent, 
             present: p, 
-            absent: ab, 
-            leave: lv, 
-            late: lt 
+            absent: ab,
+            leave: 0,
+            late: 0
         };
     });
 
@@ -299,8 +351,8 @@ function saveAttendanceData() {
         totalStudents,
         present,
         absent,
-        leave,
-        late,
+        leave: 0,
+        late: 0,
         percentage: totalStudents > 0 ? parseFloat(((present / totalStudents) * 100).toFixed(2)) : 0
     };
 
@@ -308,7 +360,6 @@ function saveAttendanceData() {
         .then(() => {
             localStorage.setItem(`cooldown_save_date_${targetDate}`, Date.now().toString());
 
-            // 🛠️ [แก้ไขจุดที่ 2]: ปรับฟอร์แมตเปรียบเทียบให้เป็นตัวเลข 2 หลักทั้งหมด (เสถียรและจับคู่วันที่ได้ตรงกันอย่างถูกต้องแน่นอน)
             const todayObj = new Date();
             const todayYear = todayObj.getFullYear();
             const todayMonth = String(todayObj.getMonth() + 1).padStart(2, '0');
@@ -316,7 +367,6 @@ function saveAttendanceData() {
             const systemTodayStr = `${todayYear}-${todayMonth}-${todayDay}`;
 
             if (targetDate === systemTodayStr) {
-                // กรณีที่เป็นวันปัจจุบัน -> ให้ทำงานส่งแจ้งเตือนเข้ากลุ่ม LINE บอทตามปกติ
                 alert(`🎉 สำเร็จ! บันทึกข้อมูลของวันที่ ${targetDate} โดยครูผู้ดูแล (${currentUserEmail}) เข้าสู่คลาวด์แล้ว\n🚀 ระบบกำลังส่งรายงานเข้า LINE Bot อัตโนมัติ...`);
                 
                 const scriptUrl = "https://script.google.com/macros/s/AKfycbz3ZO2EYhEH8RzSxm_o5jL0lZcXQD-qM2Hm8kxBK_gHqTm4dQD_jynumuHs7YZ0H1F__w/exec";
@@ -328,7 +378,6 @@ function saveAttendanceData() {
                     body: JSON.stringify(attendancePayload)
                 });
             } else {
-                // กรณีเป็นการบันทึกข้อมูลย้อนหลัง -> แจ้งเตือนเซฟสำเร็จในคลาวด์ แต่จะระงับการยิง Webhook ไลน์
                 alert(`🎉 สำเร็จ! ระบบทำการบันทึกข้อมูลสถิติตย้อนหลังประจำวันที่ ${targetDate} ลงฐานข้อมูลคลาวด์เรียบร้อยแล้ว\nℹ️ (หมายเหตุ: ไม่มีการส่งแจ้งเตือนซ้ำเข้าแอพ LINE เนื่องจากเป็นการลงประวัติย้อนหลัง)`);
                 return null;
             }
@@ -344,7 +393,6 @@ function saveAttendanceData() {
         });
 }
 
-// ระบบสลับธีม Dark Mode / Light Mode
 function toggleDarkMode() {
     const isDark = document.documentElement.classList.toggle('dark');
     document.getElementById('theme-icon').className = isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
@@ -370,34 +418,47 @@ function loadAttendanceData() {
 
                 const rows = document.querySelectorAll('#table-body tr');
                 rows.forEach(row => {
-                    const className = row.cells[0].innerText;
+                    if (row.id === 'web-total-row' || row.id === 'print-extra-row') return;
+                    const className = row.querySelector('.class-name-td').innerText;
                     const classData = savedData.classes ? savedData.classes[className] : null;
                     if (classData) {
                         row.querySelector('.male-input').value = classData.male;
                         row.querySelector('.female-input').value = classData.female;
-                        row.querySelector('.male-present-input').value = (classData.malePresent !== undefined) ? classData.malePresent : "";
-                        row.querySelector('.female-present-input').value = (classData.femalePresent !== undefined) ? classData.femalePresent : "";
+                        
+                        const mTotal = parseInt(classData.male) || 0;
+                        const fTotal = parseInt(classData.female) || 0;
+                        row.querySelector('.total-input').value = mTotal + fTotal;
+
+                        const mPresent = (classData.malePresent !== undefined) ? classData.malePresent : "";
+                        const fPresent = (classData.femalePresent !== undefined) ? classData.femalePresent : "";
+                        
+                        row.querySelector('.male-present-input').value = mPresent;
+                        row.querySelector('.female-present-input').value = fPresent;
+                        
+                        row.querySelector('.male-absent-input').value = mPresent !== "" ? (mTotal - parseInt(mPresent) || 0) : 0;
+                        row.querySelector('.female-absent-input').value = fPresent !== "" ? (fTotal - parseInt(fPresent) || 0) : 0;
+                        
                         row.querySelector('.present-input').value = classData.present;
                         row.querySelector('.absent-input').value = classData.absent;
-                        row.querySelector('.leave-input').value = classData.leave;
-                        row.querySelector('.late-input').value = classData.late;
                     }
                 });
             } else {
                 if (dailyNoteInput) dailyNoteInput.value = '';
                 const rows = document.querySelectorAll('#table-body tr');
                 rows.forEach(row => {
-                    const className = row.cells[0].innerText;
+                    if (row.id === 'web-total-row' || row.id === 'print-extra-row') return;
+                    const className = row.querySelector('.class-name-td').innerText;
                     const currentSetupData = defaultStudentsData[className] || { male: 0, female: 0 };
                     row.querySelector('.male-input').value = currentSetupData.male;
                     row.querySelector('.female-input').value = currentSetupData.female;
+                    row.querySelector('.total-input').value = currentSetupData.male + currentSetupData.female;
                     
                     row.querySelector('.male-present-input').value = "";
                     row.querySelector('.female-present-input').value = "";
+                    row.querySelector('.male-absent-input').value = 0;
+                    row.querySelector('.female-absent-input').value = 0;
                     row.querySelector('.present-input').value = "";
                     row.querySelector('.absent-input').value = 0;
-                    row.querySelector('.leave-input').value = 0;
-                    row.querySelector('.late-input').value = 0;
                 });
             }
             updateCalculations();
@@ -419,27 +480,25 @@ function updatePieChart(present, absent, leave, late) {
     if (!canvasElement) return;
 
     const ctx = canvasElement.getContext('2d');
-    const chartData = [present, absent, leave, late];
-    const totalSignals = present + absent + leave + late;
+    const chartData = [present, absent];
+    const totalSignals = present + absent;
 
     if (attendancePieChart) {
-        attendancePieChart.data.datasets[0].data = totalSignals === 0 ? [1, 0, 0, 0] : chartData;
+        attendancePieChart.data.datasets[0].data = totalSignals === 0 ? [1, 0] : chartData;
         attendancePieChart.update();
     } else {
         attendancePieChart = new Chart(ctx, {
             type: 'pie',
             data: {
-                labels: ['มาเรียนจริง (คน)', 'ขาดเรียน (คน)', 'ลาเรียน (คน)', 'มาสาย (คน)'],
+                labels: ['มาเรียนจริง (คน)', 'รวมขาดเรียน (คน)'],
                 datasets: [{
-                    data: totalSignals === 0 ? [1, 0, 0, 0] : chartData,
+                    data: totalSignals === 0 ? [1, 0] : chartData,
                     backgroundColor: [
                         'rgba(16, 185, 129, 0.85)', 
-                        'rgba(239, 68, 68, 0.85)',   
-                        'rgba(245, 158, 11, 0.85)',  
-                        'rgba(59, 130, 246, 0.85)'   
+                        'rgba(239, 68, 68, 0.85)'
                     ],
                     borderColor: [
-                        '#10b981', '#ef4444', '#f59e0b', '#3b82f6'
+                        '#10b981', '#ef4444'
                     ],
                     borderWidth: 2,
                     hoverOffset: 12
@@ -525,8 +584,6 @@ function exportMonthlyReportToExcel() {
                         <th>นักเรียนทั้งหมด (คน)</th>
                         <th>มาเรียนรวม (คน)</th>
                         <th>ขาดเรียนรวม (คน)</th>
-                        <th>ลาเรียนรวม (คน)</th>
-                        <th>มาสายรวม (คน)</th>
                         <th>ร้อยละการมาเรียนรวมประจำวัน</th>
                         <th style="width: 250px;">หมายเหตุ / บันทึกประจำวัน</th>
                     </tr>
@@ -535,18 +592,14 @@ function exportMonthlyReportToExcel() {
             let grandTotalStudentsSum = 0;
             let grandPresentAvgSum = 0;
             let grandAbsentAvgSum = 0;
-            let grandLeaveAvgSum = 0;
-            let grandLateAvgSum = 0;
             let totalDaysCount = monthlyRecords.length;
 
             monthlyRecords.forEach((record) => {
-                const sum = record.summary || { totalStudents: 0, present: 0, absent: 0, leave: 0, late: 0, percentage: 0 };
+                const sum = record.summary || { totalStudents: 0, present: 0, absent: 0, percentage: 0 };
                 
                 grandTotalStudentsSum = sum.totalStudents; 
                 grandPresentAvgSum += sum.present;
                 grandAbsentAvgSum += sum.absent;
-                grandLeaveAvgSum += sum.leave;
-                grandLateAvgSum += sum.late;
 
                 excelTemplate += `
                     <tr>
@@ -554,8 +607,6 @@ function exportMonthlyReportToExcel() {
                         <td>${sum.totalStudents}</td>
                         <td>${sum.present}</td>
                         <td>${sum.absent}</td>
-                        <td>${sum.leave}</td>
-                        <td>${sum.late}</td>
                         <td style="color: #059669; font-weight: bold;">${sum.percentage}%</td>
                         <td style="text-align: left; mso-number-format:'\\@';">${record.dailyNote || '-'}</td>
                     </tr>
@@ -564,8 +615,6 @@ function exportMonthlyReportToExcel() {
 
             grandPresentAvgSum = grandPresentAvgSum / totalDaysCount;
             grandAbsentAvgSum = grandAbsentAvgSum / totalDaysCount;
-            grandLeaveAvgSum = grandLeaveAvgSum / totalDaysCount;
-            grandLateAvgSum = grandLateAvgSum / totalDaysCount;
             const totalPercentage = grandTotalStudentsSum > 0 ? ((grandPresentAvgSum / grandTotalStudentsSum) * 100).toFixed(2) : "0.00";
 
             excelTemplate += `
@@ -574,8 +623,6 @@ function exportMonthlyReportToExcel() {
                         <td>${grandTotalStudentsSum} คน (นร.ทั้งหมด)</td>
                         <td>${grandPresentAvgSum.toFixed(1)}</td>
                         <td>${grandAbsentAvgSum.toFixed(1)}</td>
-                        <td>${grandLeaveAvgSum.toFixed(1)}</td>
-                        <td>${grandLateAvgSum.toFixed(1)}</td>
                         <td style="color: #059669;">${totalPercentage}%</td>
                         <td>สรุปข้อมูลจากคลาวด์รวม ${totalDaysCount} วันทำการ</td>
                     </tr>
@@ -695,7 +742,6 @@ function loadStudentMasterDataFromServer() {
         });
 }
 
-// 🟢 ดึงข้อมูลฐานข้อมูลคลาวด์แบบ Batch เพื่อจัดเรียงพิมพ์รายงาน PDF แยกหน้ากรณีพิมพ์ช่วงเวลาหลายๆ วัน
 function printBatchReportPDF() {
     const start = document.getElementById('print-start-date').value;
     const end = document.getElementById('print-end-date').value;
@@ -743,16 +789,28 @@ function printBatchReportPDF() {
                     const classData = data.classes ? data.classes[cls] : null;
                     const rows = document.querySelectorAll('#table-body tr');
                     rows.forEach(row => {
-                        if (row.cells[0].innerText === cls) {
+                        if (row.id === 'web-total-row' || row.id === 'print-extra-row') return;
+                        const currentClassName = row.querySelector('.class-name-td').innerText;
+                        if (currentClassName === cls) {
                             if (classData) {
                                 row.querySelector('.male-input').value = classData.male;
                                 row.querySelector('.female-input').value = classData.female;
-                                row.querySelector('.male-present-input').value = (classData.malePresent !== undefined) ? classData.malePresent : "";
-                                row.querySelector('.female-present-input').value = (classData.femalePresent !== undefined) ? classData.femalePresent : "";
+                                
+                                const mTotal = parseInt(classData.male) || 0;
+                                const fTotal = parseInt(classData.female) || 0;
+                                row.querySelector('.total-input').value = mTotal + fTotal;
+                                
+                                const mPresent = (classData.malePresent !== undefined) ? classData.malePresent : "";
+                                const fPresent = (classData.femalePresent !== undefined) ? classData.femalePresent : "";
+                                
+                                row.querySelector('.male-present-input').value = mPresent;
+                                row.querySelector('.female-present-input').value = fPresent;
+                                
+                                row.querySelector('.male-absent-input').value = mPresent !== "" ? (mTotal - parseInt(mPresent) || 0) : 0;
+                                row.querySelector('.female-absent-input').value = fPresent !== "" ? (fTotal - parseInt(fPresent) || 0) : 0;
+
                                 row.querySelector('.present-input').value = classData.present;
                                 row.querySelector('.absent-input').value = classData.absent;
-                                row.querySelector('.leave-input').value = classData.leave;
-                                row.querySelector('.late-input').value = classData.late;
                             }
                         }
                     });
@@ -793,5 +851,4 @@ function printBatchReportPDF() {
         });
 }
 
-// 🎬 รันสแตนด์บายโครงสร้างตารางตอนเริ่มต้นเปิดแอปพลิเคชัน
 renderTable();

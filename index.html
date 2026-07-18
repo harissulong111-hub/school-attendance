@@ -54,7 +54,7 @@
             appearance: textfield;
         }
 
-        .print-signatures-zone {
+        .print-signatures-zone, .print-header-zone, .print-training-cell, .print-row-total {
             display: none;
         }
 
@@ -87,7 +87,6 @@
             cursor: pointer;
         }
 
-        /* ตกแต่งสไตล์ Glassmorphism ให้ดูแพงระดับสากล */
         .glass-header {
             background: rgba(255, 255, 255, 0.75);
             backdrop-filter: blur(15px);
@@ -101,17 +100,17 @@
 
         @media print {
             @page {
-                size: A4 portrait;
-                margin: 10mm; 
+                size: A4 landscape;
+                margin: 0mm; 
             }
-            nav, button, #user-role-badge, .no-print, #attendanceChart-container, #live-clock-container, footer {
+            nav, button, #user-role-badge, .no-print, #attendanceChart-container, #live-clock-container, footer, .web-only-header {
                 display: none !important;
             }
             
             body {
                 background: white !important;
                 color: black !important;
-                padding: 0 !important;
+                padding: 10mm 15mm !important;
                 margin: 0 !important;
             }
             main {
@@ -119,94 +118,73 @@
                 max-width: 100% !important;
                 width: 100% !important;
             }
-
-            .grid-cols-1 {
-                display: flex !important;
-                flex-direction: row !important;
-                justify-content: space-between !important;
-                gap: 8px !important;
-                width: 100% !important;
-            }
-            .grid-cols-1 > div {
-                flex: 1 !important;
-                padding: 10px !important;
-                border-radius: 8px !important;
-                border: 1px solid #cbd5e1 !important;
-                background: #fff !important;
-                box-shadow: none !important;
-            }
-            .text-3xl { font-size: 1.5rem !important; font-weight: 700 !important; }
-            .text-2xl { font-size: 1.3rem !important; font-weight: 700 !important; }
-            .text-xs { font-size: 10px !important; }
-
+            .grid-cols-1 { display: none !important; }
             .bg-white, .dark\:bg-premium-cardDark {
                 box-shadow: none !important;
-                border: 1px solid #e2e8f0 !important;
+                border: none !important;
                 background-color: #fff !important;
                 color: #000 !important;
             }
-            .relative i {
-                display: none !important; 
+
+            .print-header-zone {
+                display: block !important;
+                text-align: center;
+                margin-bottom: 15px;
+                color: black;
             }
-            input[type=text] {
-                border: none !important;
-                border-bottom: 1px dotted #94a3b8 !important;
-                background: transparent !important;
-                padding-left: 0 !important;
-                text-align: left !important;
-                border-radius: 0 !important;
-            }
+            .print-header-zone h2 { font-size: 20px !important; font-weight: bold !important; }
+            .print-header-zone p { font-size: 15px !important; font-weight: bold !important; }
 
             .overflow-x-auto {
                 overflow: visible !important;
                 width: 100% !important;
             }
             table {
-                border: 1px solid #94a3b8 !important;
+                border: 1px solid #000 !important;
                 border-collapse: collapse !important;
                 width: 100% !important;
-                table-layout: fixed !important; 
             }
             th, td {
-                border: 1px solid #cbd5e1 !important;
+                border: 1px solid #000 !important;
                 color: black !important;
-                padding: 6px 4px !important; 
-                font-size: 11px !important;
+                padding: 4px 2px !important; 
+                font-size: 14px !important;
                 text-align: center !important;
-                word-wrap: break-word !important;
-            }
-            th:first-child, td:first-child {
-                width: 10% !important; 
-            }
-            th:last-child, td:last-child {
-                text-align: right !important;
-                padding-right: 6px !important;
-                width: 16% !important; 
             }
 
+            .class-percentage, .hide-on-print { 
+                display: none !important; 
+            }
+
+            .print-training-cell {
+                display: table-cell !important;
+                text-align: left !important;
+                vertical-align: top !important;
+                padding: 8px 10px !important;
+                font-size: 14px !important;
+                line-height: 2.1 !important;
+                color: #000 !important;
+                border-left: 1px solid #000 !important;
+                border-right: 1px solid #000 !important;
+            }
+            
+            /* 2. เปลี่ยนสีข้อความตัวเลขในตารางและอินพุตของใบพิมพ์รายงานเป็นสีดำทั้งหมด */
+            td, td input, span {
+                color: #000000 !important;
+                -webkit-text-fill-color: #000000 !important;
+            }
+            
             td input {
                 border: none !important;
                 background: transparent !important;
                 padding: 0 !important;
                 text-align: center !important;
-                width: 100% !important;
-                font-size: 11px !important;
-                color: black !important;
-            }
-            td input::placeholder {
-                color: transparent !important;
             }
 
             .print-signatures-zone {
                 display: block !important;
-                margin-top: 25px !important;
+                margin-top: 30px !important;
                 width: 100% !important;
-            }
-            
-            .thai-date-display {
-                color: black !important;
-                padding-left: 0 !important;
-                font-size: 14px !important;
             }
         }
     </style>
@@ -298,19 +276,19 @@
                     </div>
                     <div class="bg-white dark:bg-premium-cardDark p-6 rounded-2xl border border-slate-200/60 dark:border-slate-800/80 shadow-premium-md flex items-center justify-between transition-all duration-300 hover:-translate-y-1 hover:shadow-premium-lg">
                         <div>
-                            <p class="text-xs text-slate-400 uppercase tracking-wider font-bold">ขาดเรียน</p>
+                            <p class="text-xs text-slate-400 uppercase tracking-wider font-bold">รวมขาดเรียนทั้งหมด</p>
                             <h3 class="text-3xl font-black mt-2 tracking-tight text-rose-500" id="dash-absent">0 <span class="text-xs font-normal text-slate-400">คน</span></h3>
                         </div>
                         <div class="w-12 h-12 bg-rose-50 text-rose-600 dark:bg-rose-950/50 dark:text-rose-400 rounded-xl flex items-center justify-center text-lg no-print shadow-premium-sm"><i class="fa-solid fa-user-xmark"></i></div>
                     </div>
                     <div class="bg-white dark:bg-premium-cardDark p-6 rounded-2xl border border-slate-200/60 dark:border-slate-800/80 shadow-premium-md grid grid-cols-2 gap-2 transition-all duration-300 hover:-translate-y-1 hover:shadow-premium-lg">
                         <div class="border-r border-slate-200/60 dark:border-slate-800/80 pr-2 flex flex-col justify-center">
-                            <p class="text-[11px] text-slate-400 uppercase tracking-wider font-bold">ลาเรียน</p>
-                            <h4 class="text-xl font-black mt-1 text-amber-500" id="dash-leave">0 <span class="text-xs font-normal text-slate-400">คน</span></h4>
+                            <p class="text-[11px] text-slate-400 uppercase tracking-wider font-bold">นักเรียนชายขาด</p>
+                            <h4 class="text-xl font-black mt-1 text-rose-500" id="dash-male-absent">0 <span class="text-xs font-normal text-slate-400">(0.00%)</span></h4>
                         </div>
                         <div class="pl-2 flex flex-col justify-center">
-                            <p class="text-[11px] text-slate-400 uppercase tracking-wider font-bold">มาสาย</p>
-                            <h4 class="text-xl font-black mt-1 text-blue-500" id="dash-late">0 <span class="text-xs font-normal text-slate-400">คน</span></h4>
+                            <p class="text-[11px] text-slate-400 uppercase tracking-wider font-bold">นักเรียนหญิงขาด</p>
+                            <h4 class="text-xl font-black mt-1 text-pink-500" id="dash-female-absent">0 <span class="text-xs font-normal text-slate-400">(0.00%)</span></h4>
                         </div>
                     </div>
                 </div>
@@ -342,56 +320,136 @@
             </div>
 
             <div class="bg-white dark:bg-premium-cardDark rounded-3xl border border-slate-200/60 dark:border-slate-800/60 shadow-premium-lg overflow-hidden transition-all duration-300">
-                <div class="p-6 border-b border-slate-200/60 dark:border-slate-800/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50/50 dark:bg-slate-900/20">
+                
+                <div class="print-header-zone">
+                    <h2>สถิตินักเรียนประจำวัน โรงเรียนบ้านกาหยี</h2>
+                    <p>สำนักงานเขตพื้นที่การศึกษาประถมศึกษาปัตตานี เขต 1</p>
+                    <p id="print-thai-date-header" style="font-weight: bold; margin-top: 2px;">วัน.......................ที่..............เดือน.........................................พ.ศ................</p>
+                </div>
+
+                <div class="p-6 border-b border-slate-200/60 dark:border-slate-800/80 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-slate-50/50 dark:bg-slate-900/20 web-only-header">
                     <div>
                         <h2 class="text-xl font-extrabold tracking-tight text-slate-800 dark:text-white">ตารางสรุปจำแนกรายชั้นเรียน</h2>
                         <p class="text-xs text-slate-400 mt-0.5">จำนวนนักเรียนที่มาเรียนจริงในแต่ละวันแยกตามระดับชั้น</p>
                     </div>
                     <div class="w-full sm:w-96 relative">
                         <i class="fa-solid fa-pen-fancy text-slate-400 absolute left-4 top-4 text-xs"></i>
-                        <input type="text" id="daily-note" placeholder="เมนูอาหารประจำวัน-" 
-       class="w-full bg-slate-50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700/80 rounded-xl py-3 pl-10 pr-4 text-sm font-bold text-slate-900 dark:text-white print:text-black outline-none focus:border-blue-500 transition-all shadow-premium-sm">
+                        <input type="text" id="daily-note" placeholder="เมนูอาหารประจำวัน-" class="w-full bg-slate-50 dark:bg-slate-800/30 border border-slate-200 dark:border-slate-700/80 rounded-xl py-3 pl-10 pr-4 text-sm font-bold text-slate-900 dark:text-white print:text-black outline-none focus:border-blue-500 transition-all shadow-premium-sm">
                     </div>
                 </div>
                 
                 <div class="overflow-x-auto">
-    <table class="w-full text-left border-collapse">
-        <thead>
-            <tr class="bg-slate-50/70 dark:bg-slate-800/40 text-slate-400 font-bold uppercase text-sm tracking-wider border-b border-slate-100 dark:border-slate-800">
-                <th class="p-4 text-center">ระดับชั้น</th>
-                <th class="p-4 text-center">ชาย (ทั้งหมด)</th>
-                <th class="p-4 text-center">หญิง (ทั้งหมด)</th>
-                <th class="p-4 text-center bg-blue-500/5 text-blue-500">นักเรียนชายมา</th>
-                <th class="p-4 text-center bg-pink-500/5 text-pink-500">นักเรียนหญิงมา</th>
-                <th class="p-4 text-center bg-emerald-500/5 text-emerald-500">รวมนักเรียนมาวันนี้</th>
-                <th class="p-4 text-center">ขาดเรียน</th>
-                <th class="p-4 text-center">ลาเรียน</th>
-                <th class="p-4 text-center">มาสาย</th>
-                <th class="p-4 text-right pr-6">ร้อยละการมาเรียน</th>
-            </tr>
-        </thead>
-        <tbody id="table-body" class="text-sm divide-y divide-slate-100 dark:divide-slate-800">
-        </tbody>
-    </table>
-</div>
-
-                <div class="print-signatures-zone px-6 pb-6">
-                    <div style="display: flex; justify-content: space-between; width: 100%; gap: 30px;">
-                        <div style="flex: 1; display: flex; flex-direction: column; gap: 15px; align-items: flex-start;">
-                            <div style="font-size: 11px; font-weight: bold; margin-bottom: 2px;">ลงชื่อ ครูเวรประจำวัน</div>
-                            <div id="duty-teacher-1" style="width: 100%;"></div>
-                            <div id="duty-teacher-2" style="width: 100%;"></div>
-                            <div id="duty-teacher-3" style="width: 100%;"></div>
-                        </div>
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr class="bg-slate-50/70 dark:bg-slate-800/40 text-slate-800 dark:text-slate-400 font-bold text-xs uppercase border-b border-slate-300">
+                                <th class="p-2 border text-center" rowspan="2" style="width: 70px;">ชั้น</th>
+                                <th class="p-1 border text-center" colspan="3">จำนวนนักเรียนทั้งหมด</th>
+                                <th class="p-1 border text-center" colspan="3">จำนวนนักเรียนที่มาเรียนวันนี้</th>
+                                <th class="p-1 border text-center" colspan="3">จำนวนนักเรียนที่ขาดเรียนวันนี้</th>
+                                <th class="p-2 border text-center hide-on-print" rowspan="2" style="width: 105px;">ร้อยละการมาเรียน</th>
+                                <th class="p-2 border text-center print-row-total" rowspan="2" style="width: 480px; display: none;">อบรมนักเรียน</th>
+                            </tr>
+                            <tr class="bg-slate-50/70 dark:bg-slate-800/40 text-slate-800 dark:text-slate-400 font-bold text-xs border-b border-slate-300">
+                                <th class="p-1 border text-center" style="width: 45px;">ชาย</th>
+                                <th class="p-1 border text-center" style="width: 45px;">หญิง</th>
+                                <th class="p-1 border text-center" style="width: 45px;">รวม</th>
+                                <th class="p-1 border text-center" style="width: 45px;">ชาย</th>
+                                <th class="p-1 border text-center" style="width: 45px;">หญิง</th>
+                                <th class="p-1 border text-center" style="width: 45px;">รวม</th>
+                                <th class="p-1 border text-center" style="width: 45px;">ชาย</th>
+                                <th class="p-1 border text-center" style="width: 45px;">หญิง</th>
+                                <th class="p-1 border text-center" style="width: 45px;">รวม</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-body" class="text-sm divide-y divide-slate-100 dark:divide-slate-800">
+                        </tbody>
                         
-                        <div style="width: 45%; display: flex; flex-direction: column; align-items: flex-end; justify-content: flex-start;">
-                            <div style="width: 280px; display: flex; flex-direction: column; align-items: center; text-align: center;">
-                                <div style="font-size: 11px; font-weight: bold; margin-bottom: 15px; align-self: flex-start; text-align: left;">ผู้ตรวจเวรประจำวัน</div>
-                                <div style="font-size: 11px; margin-top: 2px;">ลงชื่อ.......................................................... ผู้ตรวจเวร</div>
-                                <div style="font-size: 11px; margin-top: 4px;">(นางสาวมนัสวี  มณีสวัสดิ์)</div>
-                                <div style="font-size: 10px; color: #475569; margin-top: 2px;">ตำแหน่ง ผู้อำนวยการโรงเรียนบ้านกาหยี</div>
+                        <script>
+                            window.onbeforeprint = function() {
+                                document.querySelectorAll('.print-row-total').forEach(el => el.style.setProperty('display', 'table-cell', 'important'));
+                                
+                                const targetDateVal = document.getElementById('record-date').value || new Date().toISOString().split('T')[0];
+                                document.title = "รายงานสถิติการมาเรียน_" + targetDateVal;
+
+                                const tbody = document.getElementById('table-body');
+                                const rows = document.querySelectorAll('#table-body tr');
+                                rows.forEach((row, index) => {
+                                    if (index === 0) {
+                                        const td = document.createElement('td');
+                                        td.className = 'print-training-cell';
+                                        td.setAttribute('rowspan', (rows.length).toString()); // ไม่รวมแถวเสริมพิเศษ
+                                        td.innerHTML = `........................................................................................................................<br>
+                                                        ........................................................................................................................<br>
+                                                        ........................................................................................................................<br>
+                                                        ........................................................................................................................<br>
+                                                        ........................................................................................................................<br>
+                                                        ........................................................................................................................<br>
+                                                        ........................................................................................................................<br>
+                                                        ........................................................................................................................<br>
+                                                        ........................................................................................................................<br>
+                                                        ........................................................................................................................`;
+                                        row.appendChild(td);
+                                    }
+                                });
+
+                                const presentDashText = document.getElementById('dash-present').innerText;
+                                const percentMatch = presentDashText.match(/\(([^)]+)%\)/);
+                                const currentTotalPercent = percentMatch ? percentMatch[1] + "%" : "0.00%";
+
+                                // 1 & 3. ดึงยอดจากแถวรวมอัตโนมัติ และนำค่าเมนูอาหารประจำวันจาก daily-note ไปใส่ไว้หลังข้อความหมายเหตุเวลาสั่งพิมพ์
+                                const noteValue = document.getElementById('daily-note').value || '';
+                                
+                                if(!document.getElementById('print-extra-row')) {
+                                    const tr = document.createElement('tr');
+                                    tr.id = "print-extra-row";
+                                    tr.innerHTML = `
+                                        <td class="p-2 border font-bold text-left" colspan="4">ร้อยละของนักเรียนที่มาเรียน</td>
+                                        <td class="p-1 border"></td><td class="p-1 border"></td>
+                                        <td class="p-1 border font-bold text-center bg-slate-50">${currentTotalPercent}</td>
+                                        <td class="p-1 border"></td><td class="p-1 border"></td><td class="p-1 border"></td>
+                                        <td class="p-2 border print-training-cell" style="vertical-align: middle;">
+                                            <strong>หมายเหตุ</strong> <span style="font-weight: bold; color: black !important;">${noteValue}</span>
+                                        </td>
+                                    `;
+                                    tbody.appendChild(tr);
+                                }
+                            };
+                            
+                            window.onafterprint = function() {
+                                document.querySelectorAll('.print-row-total').forEach(el => el.style.display = 'none');
+                                document.querySelectorAll('.print-training-cell').forEach(el => el.remove());
+                                const extraRow = document.getElementById('print-extra-row');
+                                if(extraRow) extraRow.remove();
+                                document.title = "ระบบบันทึกสถิติการมาเรียน โรงเรียนบ้านกาหยี สพป.ปัตตานี 1";
+                            };
+                        </script>
+                    </table>
+                </div>
+
+                <div class="print-signatures-zone px-4 pb-4">
+                    <div style="margin-top: 25px; display: grid; grid-template-columns: 1.15fr 1fr; gap: 20px; width: 100%; font-size: 14px;">
+                        
+                        <div style="display: flex; flex-direction: column; gap: 25px; justify-content: center;">
+                            <div>
+                                ลงชื่อ............................................................ครูเวร
+                            </div>
+                            <div>
+                                ลงชื่อ............................................................ครูเวร
+                            </div>
+                            <div>
+                                ลงชื่อ............................................................ครูเวร
                             </div>
                         </div>
+                        
+                        <div style="display: flex; flex-direction: column; justify-content: flex-start; gap: 12px; align-items: flex-start; padding-left: 20px;">
+                            <div>
+                                ลงชื่อ............................................................ผู้บริหาร
+                            </div>
+                            <div style="font-weight: bold; margin-top: 0px;">
+                                วันที่............เดือน.........................................พ.ศ................
+                            </div>
+                        </div>
+
                     </div>
                 </div>
 
@@ -449,72 +507,11 @@
     </footer>
 
     <script>
-        const dutyTeachersMap = {
-            1: ["นางสาวนวลมณี  ชัยกิจวัฒนะ", "นางสาวซัยนับ  เจ๊ะอุบง", "นางสาวฮัฝเซาะห์  มะแซ"],
-            2: ["นางศิริกาญจนา  ค้ำชู", "นางสาวอารีนี  เจ๊ะแว"],
-            3: ["นางยาวีหย๊ะ  สามะ", "นางสาวเจะรุสนัน  ปาโห๊ะ"],
-            4: ["นายอาแซ  โตะแม", "นายมะเปาซี  โตะแม", "นายฮาริส   สุหลง"],
-            5: ["นางสาวยูรีนา  ดอคอ", "นางแวฮามีด๊ะ  โตะแม"]
-        };
-
-        function updateDutyTeachersByDate(dateString) {
-            if (!dateString) return;
-            const selectedDate = new Date(dateString);
-            const dayOfWeek = selectedDate.getDay();
-            
-            const t1 = document.getElementById("duty-teacher-1");
-            const t2 = document.getElementById("duty-teacher-2");
-            const t3 = document.getElementById("duty-teacher-3");
-            
-            if (!t1 || !t2 || !t3) return;
-
-            const teachers = dutyTeachersMap[dayOfWeek] || [];
-
-            if (teachers[0]) {
-                t1.style.display = "block";
-                t1.innerHTML = `
-                    <div style="display: flex; flex-direction: column; align-items: center; width: 280px; text-align: center;">
-                        <div style="font-size: 11px;">1. ลงชื่อ.......................................................... ครูเวร</div>
-                        <div style="font-size: 11px; margin-top: 4px;">(${teachers[0]})</div>
-                    </div>
-                `;
-            } else {
-                t1.style.display = "none";
-            }
-
-            if (teachers[1]) {
-                t2.style.display = "block";
-                t2.innerHTML = `
-                    <div style="display: flex; flex-direction: column; align-items: center; width: 280px; text-align: center;">
-                        <div style="font-size: 11px;">2. ลงชื่อ.......................................................... ครูเวร</div>
-                        <div style="font-size: 11px; margin-top: 4px;">(${teachers[1]})</div>
-                    </div>
-                `;
-            } else {
-                t2.style.display = "none";
-            }
-
-            if (teachers[2]) {
-                t3.style.display = "block";
-                t3.innerHTML = `
-                    <div style="display: flex; flex-direction: column; align-items: center; width: 280px; text-align: center;">
-                        <div style="font-size: 11px;">3. ลงชื่อ.......................................................... ครูเวร</div>
-                        <div style="font-size: 11px; margin-top: 4px;">(${teachers[2]})</div>
-                    </div>
-                `;
-            } else {
-                t3.style.display = "none";
-            }
-        }
-
         function updateThaiDateDisplay(dateValue) {
             const displayEl = document.getElementById('thai-date-text');
-            if (!displayEl) return;
+            const printHeaderEl = document.getElementById('print-thai-date-header');
             
-            if (!dateValue) {
-                displayEl.innerText = "เลือกวันที่...";
-                return;
-            }
+            if (!dateValue) return;
             
             const parts = dateValue.split('-');
             if (parts.length === 3) {
@@ -524,9 +521,20 @@
                 
                 const localDate = new Date(year, month, day);
                 const options = { year: 'numeric', month: 'long', day: 'numeric' };
-                displayEl.innerText = localDate.toLocaleDateString('th-TH', options);
+                const fullThaiDate = localDate.toLocaleDateString('th-TH', options);
                 
-                updateDutyTeachersByDate(dateValue);
+                if (displayEl) displayEl.innerText = fullThaiDate;
+                
+                const daysName = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
+                const thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+                
+                const txtDay = daysName[localDate.getDay()];
+                const txtMonth = thaiMonths[month];
+                const txtYear = year + 543;
+
+                if (printHeaderEl) {
+                    printHeaderEl.innerText = `วัน ${txtDay} ที่ ${day} เดือน ${txtMonth} พ.ศ. ${txtYear}`;
+                }
             }
         }
 
@@ -563,10 +571,6 @@
             } else {
                 triggerLoadStatistics();
             }
-
-            if (dateInput) {
-                dateInput.addEventListener('change', triggerLoadStatistics);
-            }
         });
 
         function triggerLoadStatistics() {
@@ -574,10 +578,6 @@
                 loadStudentMasterDataFromServer();
             } else if (typeof loadAttendanceData === 'function') {
                 loadAttendanceData();
-            } else if (typeof fetchAttendanceData === 'function') {
-                fetchAttendanceData();
-            } else {
-                console.log("ระบบพร้อมแสดงผลสถิติ: รอแอปพลิเคชันหลักเชื่อมโยงฐานข้อมูลข้อมูล");
             }
         }
     </script>
