@@ -110,8 +110,8 @@ function renderTable() {
             <td class="p-4 text-center"><input type="number" value="${defaultData.female}" readonly class="w-16 bg-transparent text-center outline-none font-medium text-slate-500 dark:text-slate-400 cursor-not-allowed female-input"></td>
             <td class="p-4 text-center"><input type="number" value="${totalDefault}" readonly class="w-16 bg-transparent text-center outline-none font-bold text-slate-500 dark:text-slate-400 cursor-not-allowed total-input"></td>
             
-            <td class="p-4 text-center"><input type="number" value="" placeholder="ว่าง" class="w-16 bg-blue-500/10 text-blue-500 border border-blue-500/30 rounded text-center font-bold male-present-input"></td>
-            <td class="p-4 text-center"><input type="number" value="" placeholder="ว่าง" class="w-16 bg-pink-500/10 text-pink-500 border border-pink-500/30 rounded text-center font-bold female-present-input"></td>
+            <td class="p-4 text-center"><input type="number" value="" placeholder="-" class="w-16 bg-blue-500/10 text-blue-500 border border-blue-500/30 rounded text-center font-bold male-present-input"></td>
+            <td class="p-4 text-center"><input type="number" value="" placeholder="-" class="w-16 bg-pink-500/10 text-pink-500 border border-pink-500/30 rounded text-center font-bold female-present-input"></td>
             <td class="p-4 text-center"><input type="number" value="" placeholder="0" readonly class="w-16 bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 rounded text-center font-bold present-input cursor-not-allowed"></td>
             
             <td class="p-4 text-center"><input type="number" value="0" readonly class="w-16 bg-rose-500/10 text-rose-500 border border-rose-500/30 rounded text-center font-bold male-absent-input cursor-not-allowed"></td>
