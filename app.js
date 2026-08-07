@@ -44,13 +44,17 @@ auth.onAuthStateChanged((user) => {
 });
 
 function handleLogin(e) {
-    e.preventDefault();
-    const email = document.getElementById('login-email').value;
-    const password = document.getElementById('login-password').value;
+    if (e && e.preventDefault) e.preventDefault();
+    const emailInput = document.getElementById('login-email');
+    const passwordInput = document.getElementById('login-password');
+    const email = emailInput ? emailInput.value : '';
+    const password = passwordInput ? passwordInput.value : '';
     
     auth.signInWithEmailAndPassword(email, password)
         .then((userCredential) => {
             alert("🔑 เข้าสู่ระบบสำเร็จ ยินดีต้อนรับเข้าสู่ระบบ E-Attendance ครับ");
+            const loginOverlay = document.getElementById('login-overlay');
+            if (loginOverlay) loginOverlay.classList.add('hidden');
         })
         .catch((error) => {
             console.error("Login Error:", error);
@@ -59,10 +63,16 @@ function handleLogin(e) {
 }
 
 function handleLogout() {
-    if (confirm("คุณต้องการออกจากระบบการบันทึกสถิติตี้ใช่หรือไม่?")) {
+    if (confirm("คุณต้องการออกจากระบบการบันทึกสถิตินี้ใช่หรือไม่?")) {
         auth.signOut().then(() => {
             alert("🔒 ออกจากระบบเรียบร้อยแล้ว");
-            document.getElementById('login-form').reset();
+            const loginForm = document.getElementById('login-form');
+            if (loginForm) loginForm.reset();
+            const loginOverlay = document.getElementById('login-overlay');
+            if (loginOverlay) loginOverlay.classList.remove('hidden');
+        }).catch((error) => {
+            console.error("Logout Error:", error);
+            alert("❌ ไม่สามารถออกจากระบบได้: " + error.message);
         });
     }
 }
@@ -982,6 +992,7 @@ function buildBatchPrintPageHTML(record) {
     return `
         <div class="batch-print-page bg-white text-black p-0 mb-8" style="background: white !important; color: black !important; padding: 0 !important; margin: 0 !important;">
             <div class="print-header-zone" style="display: block !important; text-align: center; margin-bottom: 15px; color: black;">
+                <img src="logo.png" alt="โลโก้โรงเรียนบ้านกาหยี" style="width: 70px; height: 70px; object-fit: contain; margin: 0 auto 6px auto; display: block;">
                 <h2 style="font-size: 20px !important; font-weight: bold !important; margin: 0;">สถิตินักเรียนประจำวัน โรงเรียนบ้านกาหยี</h2>
                 <p style="font-size: 15px !important; font-weight: bold !important; margin: 2px 0 0 0;">สำนักงานเขตพื้นที่การศึกษาประถมศึกษาปัตตานี เขต 1</p>
                 <p style="font-size: 15px !important; font-weight: bold !important; margin-top: 2px;">${thaiDateText}</p>
@@ -1089,8 +1100,32 @@ function printBatchReportPDF() {
             }
 
             const records = [];
-            querySnapshot.forEach((doc) => records.push(doc.data()));
+            querySnapshot.forEach((doc) => {
+                if (doc.id === "master_setup") return;
+                const data = doc.data();
+                if (!data || !data.date) return;
+
+                // ตรวจสอบว่าต้องเป็นวันที่ที่มีการบันทึกข้อมูลจริงเท่านั้น (มีคลาสข้อมูล และมีผู้บันทึก/หมายเหตุ/ตัวเลขมาเรียน)
+                const hasClasses = data.classes && Object.keys(data.classes).length > 0;
+                const hasSubmittedBy = !!data.submittedBy;
+                const hasDailyNote = data.dailyNote && data.dailyNote.trim() !== "";
+                const hasPresentCounts = hasClasses && Object.values(data.classes).some(c => 
+                    (c.malePresent !== "" && c.malePresent !== undefined && c.malePresent !== null) || 
+                    (c.femalePresent !== "" && c.femalePresent !== undefined && c.femalePresent !== null) || 
+                    (c.present > 0)
+                );
+
+                if (hasClasses && (hasSubmittedBy || hasDailyNote || hasPresentCounts)) {
+                    records.push(data);
+                }
+            });
+
             records.sort((a, b) => a.date.localeCompare(b.date));
+
+            if (records.length === 0) {
+                alert(`ℹ️ ไม่พบวันที่มีการลงบันทึกข้อมูลสถิติเรียนจริงในช่วงวันที่ ${start} ถึง ${end}\n(ระบบจะข้ามวันหยุดและวันที่ไม่มีการบันทึกให้อัตโนมัติ)`);
+                return;
+            }
 
             const virtualDeck = document.getElementById('batch-print-virtual-deck');
             const mainArea = document.getElementById('main-render-area');

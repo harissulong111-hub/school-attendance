@@ -8,6 +8,7 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-auth-compat.js"></script>
     
     <title>ระบบบันทึกสถิติการมาเรียน โรงเรียนบ้านกาหยี สพป.ปัตตานี 1</title>
+    <link rel="icon" type="image/png" href="logo.png">
     <script>
         (function() {
             const _w = console.warn;
@@ -52,87 +53,61 @@
     <style>
         body {
             font-family: '"Plus Jakarta Sans"', 'Noto Sans Thai', sans-serif;
-        }
-        input[type=number]::-webkit-inner-spin-button, 
-        input[type=number]::-webkit-outer-spin-button { 
-            -webkit-appearance: none; 
-            margin: 0; 
-        }
-        input[type=number] {
-            -moz-appearance: textfield;
-            appearance: textfield;
+            background-color: #090d16;
         }
 
-        .print-signatures-zone, .print-header-zone, .print-training-cell, .print-row-total {
-            display: none;
+        .dark body {
+            background-color: #090d16;
+            color: #f8fafc;
         }
 
-        .thai-date-wrapper {
-            position: relative;
-            width: 100%;
+        html:not(.dark) body {
+            background-color: #f8fafc;
+            color: #0f172a;
         }
-        .thai-date-display {
-            position: absolute;
-            inset: 0;
-            display: flex;
-            align-items: center;
-            padding-left: 3rem;
-            pointer-events: none;
-            font-size: 0.875rem;
-            font-weight: 700;
-            letter-spacing: 0.025em;
-        }
-        #record-date {
-            color: transparent !important;
-        }
-        #record-date::-webkit-calendar-picker-indicator {
-            position: absolute;
-            right: 12px;
-            top: 0;
-            bottom: 0;
-            width: 80%;
-            height: 100%;
-            opacity: 0;
-            cursor: pointer;
-        }
-
+        
         .glass-header {
-            background: rgba(255, 255, 255, 0.75);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
-        }
-        .dark .glass-header {
-            background: rgba(17, 24, 39, 0.75);
-            backdrop-filter: blur(15px);
-            -webkit-backdrop-filter: blur(15px);
+            background: rgba(9, 13, 22, 0.85);
+            backdrop-filter: blur(16px);
         }
 
-        @media print {
-            @page {
-                size: A4 landscape;
-                margin: 0mm; 
+        html:not(.dark) .glass-header {
+            background: rgba(255, 255, 255, 0.85);
+            backdrop-filter: blur(16px);
+        }
+
+        /* ตรึงคอลัมน์ชื่อชั้นเรียนสำหรับเวอร์ชันมือถือ */
+        @media (max-width: 639px) {
+            .class-name-td, th.sticky {
+                position: sticky;
+                left: 0;
+                z-index: 10;
             }
-            nav, button, #user-role-badge, .no-print, #attendanceChart-container, #live-clock-container, footer, .web-only-header {
+        }
+
+        /* รูปแบบการซ่อนเมื่อสั่งพิมพ์ (Print Rules) */
+        @media print {
+            .no-print, nav, footer, #live-clock-container, .web-only-header, button, input[type="date"], .hide-on-print, #batch-print-modal {
                 display: none !important;
             }
-            
+
             body {
                 background: white !important;
                 color: black !important;
-                padding: 10mm 15mm !important;
+                padding: 0 !important;
                 margin: 0 !important;
             }
-            main {
+
+            #main-render-area {
                 padding: 0 !important;
+                margin: 0 !important;
                 max-width: 100% !important;
-                width: 100% !important;
             }
-            .grid-cols-1 { display: none !important; }
+
             .bg-white, .dark\:bg-premium-cardDark {
-                box-shadow: none !important;
+                background: white !important;
                 border: none !important;
-                background-color: #fff !important;
-                color: #000 !important;
+                box-shadow: none !important;
             }
 
             .print-header-zone {
@@ -141,52 +116,44 @@
                 margin-bottom: 15px;
                 color: black;
             }
-            .print-header-zone h2 { font-size: 20px !important; font-weight: bold !important; }
-            .print-header-zone p { font-size: 15px !important; font-weight: bold !important; }
 
-            .overflow-x-auto {
-                overflow: visible !important;
-                width: 100% !important;
+            .print-header-zone h2 {
+                font-size: 20px !important;
+                font-weight: bold !important;
+                margin: 0;
             }
+
+            .print-header-zone p {
+                font-size: 15px !important;
+                font-weight: bold !important;
+                margin: 2px 0 0 0;
+            }
+
             table {
                 border: 1px solid #000 !important;
                 border-collapse: collapse !important;
                 width: 100% !important;
             }
+
             th, td {
                 border: 1px solid #000 !important;
                 color: black !important;
-                padding: 4px 2px !important; 
+                padding: 4px 2px !important;
                 font-size: 14px !important;
-                text-align: center !important;
             }
 
-            .class-percentage, .hide-on-print { 
-                display: none !important; 
+            th {
+                background-color: #fff !important;
+                font-weight: bold !important;
             }
 
-            .print-training-cell {
-                display: table-cell !important;
-                text-align: left !important;
-                vertical-align: top !important;
-                padding: 8px 10px !important;
-                font-size: 14px !important;
-                line-height: 2.1 !important;
-                color: #000 !important;
-                border-left: 1px solid #000 !important;
-                border-right: 1px solid #000 !important;
-            }
-            
-            /* 2. เปลี่ยนสีข้อความตัวเลขในตารางและอินพุตของใบพิมพ์รายงานเป็นสีดำทั้งหมด */
-            td, td input, span {
-                color: #000000 !important;
-                -webkit-text-fill-color: #000000 !important;
-            }
-            
-            td input {
+            input {
                 border: none !important;
                 background: transparent !important;
+                color: black !important;
+                box-shadow: none !important;
                 padding: 0 !important;
+                width: auto !important;
                 text-align: center !important;
             }
 
@@ -195,31 +162,69 @@
                 margin-top: 30px !important;
                 width: 100% !important;
             }
-            .batch-print-page {
-                page-break-after: always;
-                break-after: page;
+
+            .print-row-total {
+                display: table-cell !important;
             }
+
+            /* กฎแบ่งหน้าพิมพ์ PDF สำหรับ Batch Print */
+            .batch-print-page {
+                page-break-after: always !important;
+                break-after: page !important;
+            }
+        }
+
+        .print-header-zone, .print-signatures-zone {
+            display: none;
+        }
+
+        .thai-date-wrapper {
+            position: relative;
+        }
+        .thai-date-display {
+            position: absolute;
+            left: 48px;
+            top: 50%;
+            transform: translateY(-50%);
+            pointer-events: none;
+            z-index: 5;
+            font-size: 0.875rem;
+        }
+
+        #record-date::-webkit-datetime-edit,
+        #record-date::-webkit-inner-spin-button,
+        #record-date::-webkit-clear-button {
+            display: none;
+        }
+        
+        #record-date::-webkit-calendar-picker-indicator {
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            opacity: 0.6;
+            cursor: pointer;
         }
     </style>
 </head>
-<body class="bg-slate-50 dark:bg-premium-darkBg text-slate-800 dark:text-slate-200 min-h-screen transition-colors duration-300 antialiased flex flex-col justify-between">
+<body class="selection:bg-blue-500 selection:text-white min-h-screen flex flex-col justify-between">
 
-    <div id="login-overlay" class="fixed inset-0 bg-slate-950/90 backdrop-blur-2xl z-50 flex items-center justify-center p-4 transition-all duration-500">
-        <div class="bg-white/90 dark:bg-slate-900/90 w-full max-w-md p-8 rounded-[2rem] border border-white/20 dark:border-slate-800/80 shadow-premium-lg">
-            <div class="text-center mb-8">
-                <div class="w-16 h-16 bg-gradient-to-tr from-blue-600 via-indigo-600 to-emerald-500 rounded-2xl flex items-center justify-center text-white shadow-premium-md mx-auto mb-4">
-                    <i class="fa-solid fa-shield-lock text-2xl"></i>
+    <div id="login-overlay" class="fixed inset-0 bg-slate-950/80 backdrop-blur-md z-50 flex items-center justify-center p-4 hidden no-print">
+        <div class="bg-white dark:bg-premium-cardDark border border-slate-200/60 dark:border-slate-800/80 rounded-3xl p-8 max-w-md w-full shadow-premium-lg relative overflow-hidden">
+            <div class="absolute -top-10 -right-10 w-32 h-32 bg-blue-500/10 rounded-full blur-2xl pointer-events-none"></div>
+            <div class="flex items-center space-x-3 mb-6">
+                <img src="logo.png" alt="โลโก้โรงเรียนบ้านกาหยี" class="w-12 h-12 object-contain drop-shadow-md">
+                <div>
+                    <h3 class="text-xl font-extrabold text-slate-800 dark:text-white tracking-tight">เข้าสู่ระบบครูผู้ดูแล</h3>
+                    <p class="text-xs text-slate-400 font-medium">โรงเรียนบ้านกาหยี สพป.ปัตตานี เขต 1</p>
                 </div>
-                <h2 class="text-2xl font-black text-slate-800 dark:text-white tracking-tight">เข้าสู่ระบบจัดเก็บข้อมูลสถิติการมาเรียน</h2>
-                <p class="text-xs text-slate-400 mt-1.5">กรุณาลงชื่อเข้าใช้งานด้วยบัญชีผู้ใช้ประจำการเพื่อบันทึกข้อมูล</p>
             </div>
-            
-            <form id="login-form" onsubmit="handleLogin(event)" class="space-y-5">
+            <form id="login-form" onsubmit="handleLogin(event)" class="space-y-4">
                 <div>
                     <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">อีเมลผู้ใช้งาน</label>
                     <div class="relative">
                         <i class="fa-solid fa-envelope text-slate-400 absolute left-4 top-4 text-sm"></i>
-                        <input type="email" id="login-email" required placeholder="name@school.ac.th" class="w-full bg-slate-100 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/60 rounded-xl py-3.5 pl-11 pr-4 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none text-slate-800 dark:text-white transition-all font-medium">
+                        <input type="email" id="login-email" required placeholder="admin@bankayee.ac.th" class="w-full bg-slate-100 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/60 rounded-xl py-3.5 pl-11 pr-4 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none text-slate-800 dark:text-white transition-all font-medium">
                     </div>
                 </div>
                 <div>
@@ -229,8 +234,8 @@
                         <input type="password" id="login-password" required placeholder="••••••••" class="w-full bg-slate-100 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/60 rounded-xl py-3.5 pl-11 pr-4 text-sm focus:border-blue-500 focus:ring-2 focus:ring-blue-500/20 outline-none text-slate-800 dark:text-white transition-all font-medium">
                     </div>
                 </div>
-                <button type="submit" class="w-full py-4 bg-gradient-to-r from-blue-600 via-indigo-600 to-indigo-700 hover:from-blue-500 hover:to-indigo-600 text-white font-extrabold text-sm rounded-xl shadow-premium-md hover:shadow-glow-blue transition-all duration-300 active:scale-[0.98]">
-                    ยืนยันตัวตนเข้าสู่ระบบ
+                <button type="submit" class="w-full py-4 bg-blue-600 hover:bg-blue-500 text-white font-extrabold text-sm rounded-xl transition-all active:scale-[0.98]">
+                    ลงชื่อเข้าใช้งาน
                 </button>
             </form>
         </div>
@@ -241,9 +246,7 @@
             <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
                 <div class="flex justify-between items-center h-16 sm:h-20">
                     <div class="flex items-center space-x-2.5 sm:space-x-3 group cursor-pointer">
-                        <div class="w-9 h-9 sm:w-11 sm:h-11 bg-gradient-to-tr from-blue-600 via-indigo-600 to-emerald-500 rounded-xl flex items-center justify-center text-white shadow-premium-sm transition-transform duration-300 group-hover:scale-105">
-                            <i class="fa-solid fa-graduation-cap text-lg sm:text-xl"></i>
-                        </div>
+                        <img src="logo.png" alt="โลโก้โรงเรียนบ้านกาหยี" class="w-10 h-10 sm:w-12 sm:h-12 object-contain drop-shadow-md transition-transform duration-300 group-hover:scale-105">
                         <div>
                             <span class="font-black text-base sm:text-xl bg-gradient-to-r from-slate-900 via-blue-600 to-emerald-500 dark:from-white dark:via-blue-400 dark:to-emerald-400 bg-clip-text text-transparent tracking-tight">ข้อมูลสถิติการมาเรียน</span>
                             <p class="text-[9px] sm:text-[10px] text-slate-400 font-extrabold tracking-widest uppercase">Bankayee School</p>
@@ -338,6 +341,7 @@
             <div class="bg-white dark:bg-premium-cardDark rounded-3xl border border-slate-200/60 dark:border-slate-800/60 shadow-premium-lg overflow-hidden transition-all duration-300">
                 
                 <div class="print-header-zone">
+                    <img src="logo.png" alt="โลโก้โรงเรียนบ้านกาหยี" style="width: 70px; height: 70px; object-fit: contain; margin: 0 auto 6px auto; display: block;">
                     <h2>สถิตินักเรียนประจำวัน โรงเรียนบ้านกาหยี</h2>
                     <p>สำนักงานเขตพื้นที่การศึกษาประถมศึกษาปัตตานี เขต 1</p>
                     <p id="print-thai-date-header" style="font-weight: bold; margin-top: 2px;">วัน.......................ที่..............เดือน.........................................พ.ศ................</p>
@@ -528,7 +532,7 @@
                 </h3>
                 <button onclick="closeBatchPrintModal()" class="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"><i class="fa-solid fa-xmark text-lg"></i></button>
             </div>
-            <p class="text-xs text-slate-400 mb-4">เลือกระยะเวลาวันที่เริ่มต้นและวันสิ้นสุดที่ต้องการพิมพ์รายงานสถิติมาเรียน</p>
+            <p class="text-xs text-slate-400 mb-4">เลือกระยะเวลาวันที่เริ่มต้นและวันสิ้นสุดที่ต้องการพิมพ์ (ระบบจะดึงและพิมพ์เฉพาะวันที่ได้ลงบันทึกข้อมูลจริงเท่านั้น โดยจะข้ามเสาร์-อาทิตย์ และวันหยุดที่ไม่ได้รับการลงบันทึกให้อัตโนมัติ)</p>
             <div class="space-y-4">
                 <div>
                     <label class="block text-xs font-bold text-slate-400 uppercase mb-1">วันที่เริ่มต้น</label>
