@@ -1194,11 +1194,16 @@ function printBatchReportPDF() {
             window.print();
 
             setTimeout(() => {
-                virtualDeck.classList.add('hidden');
-                virtualDeck.innerHTML = '';
-                mainArea.classList.remove('hidden');
-                document.title = "ระบบบันทึกสถิติการมาเรียน โรงเรียนบ้านกาหยี สพป.ปัตตานี 1";
-            }, 3000);
+                if (typeof window.onafterprint === 'function') {
+                    window.onafterprint();
+                } else {
+                    virtualDeck.classList.add('hidden');
+                    virtualDeck.innerHTML = '';
+                    mainArea.classList.remove('hidden');
+                    mainArea.style.display = '';
+                    document.title = "ระบบบันทึกสถิติการมาเรียน โรงเรียนบ้านกาหยี สพป.ปัตตานี 1";
+                }
+            }, 500);
         })
         .catch((error) => {
             console.error("Batch Print Failure: ", error);
