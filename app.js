@@ -143,6 +143,41 @@ function renderTable() {
     tbody.appendChild(totalTr);
 
     document.querySelectorAll('#table-body input').forEach(input => {
+        input.addEventListener('change', (e) => {
+            const row = e.target.closest('tr');
+            if (!row || row.id === 'web-total-row' || row.id === 'print-extra-row') return;
+            const className = row.querySelector('.class-name-td').innerText;
+            const male = parseInt(row.querySelector('.male-input').value) || 0;
+            const female = parseInt(row.querySelector('.female-input').value) || 0;
+
+            if (e.target.classList.contains('male-present-input') && e.target.value !== "") {
+                let mVal = parseInt(e.target.value);
+                if (male === 0 && mVal > 0) {
+                    alert(`⚠️ ชั้น ${className} ไม่มีนักเรียนชายในระบบ (0 คน)\nกรุณาตรวจสอบว่าป้อนสลับช่องชาย/หญิงหรือไม่ครับ`);
+                    e.target.value = 0;
+                } else if (mVal > male) {
+                    alert(`⚠️ ชั้น ${className} มีนักเรียนชายทั้งหมด ${male} คน\nไม่สามารถระบุจำนวนมาเรียน ${mVal} คนได้ครับ`);
+                    e.target.value = male;
+                } else if (mVal < 0) {
+                    e.target.value = 0;
+                }
+            }
+
+            if (e.target.classList.contains('female-present-input') && e.target.value !== "") {
+                let fVal = parseInt(e.target.value);
+                if (female === 0 && fVal > 0) {
+                    alert(`⚠️ ชั้น ${className} ไม่มีนักเรียนหญิงในระบบ (0 คน)\nกรุณาตรวจสอบว่าป้อนสลับช่องชาย/หญิงหรือไม่ครับ`);
+                    e.target.value = 0;
+                } else if (fVal > female) {
+                    alert(`⚠️ ชั้น ${className} มีนักเรียนหญิงทั้งหมด ${female} คน\nไม่สามารถระบุจำนวนมาเรียน ${fVal} คนได้ครับ`);
+                    e.target.value = female;
+                } else if (fVal < 0) {
+                    e.target.value = 0;
+                }
+            }
+            e.target.dispatchEvent(new Event('input'));
+        });
+
         input.addEventListener('input', (e) => {
             const row = e.target.closest('tr');
             if (!row || row.id === 'web-total-row' || row.id === 'print-extra-row') return;
@@ -327,12 +362,62 @@ function saveAttendanceData() {
         }
     }
 
-    const dailyNote = document.getElementById('daily-note').value;
+    const dailyNoteInput = document.getElementById('daily-note');
+    const dailyNote = dailyNoteInput ? dailyNoteInput.value.trim() : "";
+
+    if (!dailyNote) {
+        alert("⚠️ ยังไม่ได้กรอกข้อมูลในช่อง \"เมนูอาหารประจำวัน\"\nกรุณาระบุรายการอาหารประจำวันนี้ก่อนทำการบันทึกข้อมูลลงระบบครับ");
+        if (dailyNoteInput) {
+            dailyNoteInput.focus();
+            dailyNoteInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            dailyNoteInput.classList.add('ring-4', 'ring-rose-500', 'border-rose-500', 'animate-pulse');
+            setTimeout(() => {
+                dailyNoteInput.classList.remove('ring-4', 'ring-rose-500', 'border-rose-500', 'animate-pulse');
+            }, 3500);
+        }
+        return;
+    }
+
+    let validationErrors = [];
+    const checkRows = document.querySelectorAll('#table-body tr');
+    checkRows.forEach(row => {
+        if (row.id === 'web-total-row' || row.id === 'print-extra-row') return;
+        const className = row.querySelector('.class-name-td').innerText;
+        const male = parseInt(row.querySelector('.male-input').value) || 0;
+        const female = parseInt(row.querySelector('.female-input').value) || 0;
+        const mPresVal = row.querySelector('.male-present-input').value;
+        const fPresVal = row.querySelector('.female-present-input').value;
+
+        if (mPresVal !== "") {
+            const mp = parseInt(mPresVal) || 0;
+            if (mp > male) {
+                validationErrors.push(`- ชั้น ${className}: นักเรียนชายมาเรียน (${mp} คน) เกินจำนวนทั้งหมดที่มี (${male} คน)`);
+            }
+            if (male === 0 && mp > 0) {
+                validationErrors.push(`- ชั้น ${className}: ระบุชายมาเรียน (${mp} คน) แต่ไม่มีนักเรียนชายในระบบ (0 คน)`);
+            }
+        }
+
+        if (fPresVal !== "") {
+            const fp = parseInt(fPresVal) || 0;
+            if (fp > female) {
+                validationErrors.push(`- ชั้น ${className}: นักเรียนหญิงมาเรียน (${fp} คน) เกินจำนวนทั้งหมดที่มี (${female} คน)`);
+            }
+            if (female === 0 && fp > 0) {
+                validationErrors.push(`- ชั้น ${className}: ระบุหญิงมาเรียน (${fp} คน) แต่ไม่มีนักเรียนหญิงในระบบ (0 คน)`);
+            }
+        }
+    });
+
+    if (validationErrors.length > 0) {
+        alert(`❌ พบข้อมูลการป้อนผิดพลาด กรุณาแก้ไขก่อนบันทึก:\n\n${validationErrors.join('\n')}`);
+        return;
+    }
 
     const attendancePayload = {
         date: targetDate,
         submittedBy: currentUserEmail, 
-        dailyNote: dailyNote || "",     
+        dailyNote: dailyNote,     
         classes: {},
         updatedAt: firebase.firestore.FieldValue.serverTimestamp() 
     };
