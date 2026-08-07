@@ -1198,7 +1198,7 @@ function printBatchReportPDF() {
                 virtualDeck.innerHTML = '';
                 mainArea.classList.remove('hidden');
                 document.title = "ระบบบันทึกสถิติการมาเรียน โรงเรียนบ้านกาหยี สพป.ปัตตานี 1";
-            }, 500);
+            }, 3000);
         })
         .catch((error) => {
             console.error("Batch Print Failure: ", error);

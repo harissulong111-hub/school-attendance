@@ -107,13 +107,19 @@
             }
         }
 
-        /* รูปแบบการซ่อนและจัดวางเมื่อสั่งพิมพ์ (Original Print Rules) */
+        /* รูปแบบการซ่อนและจัดวางเมื่อสั่งพิมพ์ (Mobile & Desktop 100% Parity Print Rules) */
         @media print {
             @page {
-                size: A4 landscape;
-                margin: 8mm 12mm; 
+                size: A4 landscape !important;
+                margin: 8mm 12mm !important; 
             }
-            nav, button, #user-role-badge, .no-print, #attendanceChart-container, #live-clock-container, footer, .web-only-header, #batch-print-modal {
+            
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            nav, button, #user-role-badge, .no-print, #attendanceChart-container, #live-clock-container, footer, .web-only-header, #batch-print-modal, #mobile-tools-modal, .fixed.bottom-0 {
                 display: none !important;
             }
 
@@ -124,6 +130,14 @@
                 margin: 0 !important;
             }
 
+            /* ล้างค่า sticky positioning บนมือถือขณะพิมพ์ เพื่อให้ตารางเรียงสวยตรงกับเดสก์ท็อป 100% */
+            .class-name-td, th.sticky {
+                position: static !important;
+                left: auto !important;
+                background: transparent !important;
+                box-shadow: none !important;
+            }
+
             #batch-print-virtual-deck:not(.hidden) {
                 display: block !important;
             }
@@ -132,7 +146,7 @@
                 display: revert !important;
             }
 
-            /* ซ่อนเนื้อหาหลักและลูกทั้งหมดขณะสั่งพิมพ์แบบสไลด์ Batch Print */
+            /* ซ่อนเนื้อหาหลักขณะสั่งพิมพ์ Batch Print */
             #main-render-area.hidden,
             #main-render-area.hidden *,
             #main-render-area[style*="display: none"],
@@ -149,7 +163,9 @@
                 width: 100% !important;
             }
 
-            .grid-cols-1 { display: none !important; }
+            #main-render-area > div.grid {
+                display: none !important;
+            }
 
             .bg-white, .dark\:bg-premium-cardDark {
                 background: white !important;
@@ -179,6 +195,7 @@
             .overflow-x-auto {
                 overflow: visible !important;
                 width: 100% !important;
+                max-width: 100% !important;
             }
 
             table {
@@ -234,6 +251,14 @@
                 display: block !important;
                 margin-top: 30px !important;
                 width: 100% !important;
+            }
+
+            .print-signatures-zone > div {
+                display: flex !important;
+                justify-content: space-between !important;
+                width: 100% !important;
+                font-size: 14px !important;
+                color: black !important;
             }
 
             .print-row-total {
