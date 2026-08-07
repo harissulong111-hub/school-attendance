@@ -78,6 +78,53 @@ function handleLogout() {
 }
 
 // =========================================================
+// 2.1 ระบบควบคุมธีม (Dark / Light Mode) & Mobile UI Helpers
+// =========================================================
+function toggleDarkMode() {
+    const html = document.documentElement;
+    html.classList.toggle('dark');
+    const isDark = html.classList.contains('dark');
+    localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    
+    const desktopIcon = document.getElementById('theme-icon');
+    const mobileIcon = document.getElementById('theme-icon-mobile');
+    
+    if (desktopIcon) {
+        desktopIcon.className = isDark ? 'fa-solid fa-moon text-sm' : 'fa-solid fa-sun text-sm text-amber-500';
+    }
+    if (mobileIcon) {
+        mobileIcon.className = isDark ? 'fa-solid fa-moon text-sm' : 'fa-solid fa-sun text-sm text-amber-500';
+    }
+}
+
+function scrollToSection(id) {
+    const el = document.getElementById(id);
+    if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
+function openMobileToolsModal() {
+    const modal = document.getElementById('mobile-tools-modal');
+    if (modal) modal.classList.remove('hidden');
+}
+
+function closeMobileToolsModal() {
+    const modal = document.getElementById('mobile-tools-modal');
+    if (modal) modal.classList.add('hidden');
+}
+
+// โหลดธีมที่บันทึกไว้ใน localStorage
+(function initTheme() {
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light') {
+        document.documentElement.classList.remove('dark');
+    } else if (savedTheme === 'dark') {
+        document.documentElement.classList.add('dark');
+    }
+})();
+
+// =========================================================
 // 3. ข้อมูลตั้งต้นและระบบสร้างตาราง 
 // =========================================================
 const classesList = ['อ.1', 'อ.2', 'อ.3', 'ป.1', 'ป.2', 'ป.3', 'ป.4', 'ป.5', 'ป.6'];
@@ -115,20 +162,20 @@ function renderTable() {
         tr.className = 'hover:bg-slate-50/50 dark:hover:bg-slate-700/30 transition-colors';
         
         tr.innerHTML = `
-            <td class="p-2 sm:p-4 font-bold text-slate-700 dark:text-slate-200 text-center class-name-td sticky left-0 bg-white dark:bg-slate-900 z-10 border-r border-slate-200 dark:border-slate-800 shadow-sm">${cls}</td>
-            <td class="p-2 sm:p-4 text-center"><input type="number" value="${defaultData.male}" readonly class="w-12 sm:w-16 bg-transparent text-center outline-none font-medium text-slate-500 dark:text-slate-400 cursor-not-allowed male-input"></td>
-            <td class="p-2 sm:p-4 text-center"><input type="number" value="${defaultData.female}" readonly class="w-12 sm:w-16 bg-transparent text-center outline-none font-medium text-slate-500 dark:text-slate-400 cursor-not-allowed female-input"></td>
-            <td class="p-2 sm:p-4 text-center"><input type="number" value="${totalDefault}" readonly class="w-12 sm:w-16 bg-transparent text-center outline-none font-bold text-slate-500 dark:text-slate-400 cursor-not-allowed total-input"></td>
+            <td class="py-2.5 px-2 font-bold text-slate-700 dark:text-slate-200 text-center class-name-td sticky left-0 bg-white dark:bg-slate-900 z-10 border-r border-slate-200 dark:border-slate-800 shadow-sm">${cls}</td>
+            <td class="py-2.5 px-1 text-center"><input type="number" value="${defaultData.male}" readonly class="w-full text-center bg-transparent outline-none font-medium text-slate-500 dark:text-slate-400 cursor-not-allowed male-input px-0"></td>
+            <td class="py-2.5 px-1 text-center"><input type="number" value="${defaultData.female}" readonly class="w-full text-center bg-transparent outline-none font-medium text-slate-500 dark:text-slate-400 cursor-not-allowed female-input px-0"></td>
+            <td class="py-2.5 px-1 text-center"><input type="number" value="${totalDefault}" readonly class="w-full text-center bg-transparent outline-none font-bold text-slate-500 dark:text-slate-400 cursor-not-allowed total-input px-0"></td>
             
-            <td class="p-2 sm:p-4 text-center"><input type="number" value="" placeholder="-" class="w-14 sm:w-16 py-1 bg-blue-500/10 text-blue-500 border border-blue-500/30 rounded text-center font-bold male-present-input"></td>
-            <td class="p-2 sm:p-4 text-center"><input type="number" value="" placeholder="-" class="w-14 sm:w-16 py-1 bg-pink-500/10 text-pink-500 border border-pink-500/30 rounded text-center font-bold female-present-input"></td>
-            <td class="p-2 sm:p-4 text-center"><input type="number" value="" placeholder="0" readonly class="w-14 sm:w-16 py-1 bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 rounded text-center font-bold present-input cursor-not-allowed"></td>
+            <td class="py-2.5 px-1 text-center"><input type="number" value="" placeholder="-" class="w-full py-1 bg-blue-500/10 text-blue-500 border border-blue-500/30 rounded-lg text-center font-bold male-present-input px-0"></td>
+            <td class="py-2.5 px-1 text-center"><input type="number" value="" placeholder="-" class="w-full py-1 bg-pink-500/10 text-pink-500 border border-pink-500/30 rounded-lg text-center font-bold female-present-input px-0"></td>
+            <td class="py-2.5 px-1 text-center"><input type="number" value="" placeholder="0" readonly class="w-full py-1 bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 rounded-lg text-center font-bold present-input cursor-not-allowed px-0"></td>
             
-            <td class="p-2 sm:p-4 text-center"><input type="number" value="0" readonly class="w-12 sm:w-16 py-1 bg-rose-500/10 text-rose-500 border border-rose-500/30 rounded text-center font-bold male-absent-input cursor-not-allowed"></td>
-            <td class="p-2 sm:p-4 text-center"><input type="number" value="0" readonly class="w-12 sm:w-16 py-1 bg-rose-500/10 text-rose-500 border border-rose-500/30 rounded text-center font-bold female-absent-input cursor-not-allowed"></td>
-            <td class="p-2 sm:p-4 text-center"><input type="number" value="0" readonly class="w-12 sm:w-16 py-1 bg-rose-500/10 text-rose-500 border border-rose-500/30 rounded text-center font-bold absent-input cursor-not-allowed"></td>
+            <td class="py-2.5 px-1 text-center"><input type="number" value="0" readonly class="w-full py-1 bg-rose-500/10 text-rose-500 border border-rose-500/30 rounded-lg text-center font-bold male-absent-input cursor-not-allowed px-0"></td>
+            <td class="py-2.5 px-1 text-center"><input type="number" value="0" readonly class="w-full py-1 bg-rose-500/10 text-rose-500 border border-rose-500/30 rounded-lg text-center font-bold female-absent-input cursor-not-allowed px-0"></td>
+            <td class="py-2.5 px-1 text-center"><input type="number" value="0" readonly class="w-full py-1 bg-rose-500/10 text-rose-500 border border-rose-500/30 rounded-lg text-center font-bold absent-input cursor-not-allowed px-0"></td>
             
-            <td class="p-2 sm:p-4 text-right font-bold text-emerald-500 class-percentage">0.00%</td>
+            <td class="py-2.5 px-2 text-center font-bold text-emerald-500 class-percentage">0.00%</td>
         `;
         tbody.appendChild(tr);
     });
@@ -138,17 +185,17 @@ function renderTable() {
     totalTr.id = 'web-total-row';
     totalTr.className = 'bg-slate-100/60 dark:bg-slate-800/60 font-bold';
     totalTr.innerHTML = `
-        <td class="p-2 sm:p-4 text-center text-slate-900 dark:text-white font-black sticky left-0 bg-slate-100 dark:bg-slate-800 z-10 border-r border-slate-200 dark:border-slate-800 shadow-sm">รวม</td>
-        <td class="p-2 sm:p-4 text-center"><span id="sum-male">0</span></td>
-        <td class="p-2 sm:p-4 text-center"><span id="sum-female">0</span></td>
-        <td class="p-2 sm:p-4 text-center"><span id="sum-total">0</span></td>
-        <td class="p-2 sm:p-4 text-center text-blue-500"><span id="sum-male-present">0</span></td>
-        <td class="p-2 sm:p-4 text-center text-pink-500"><span id="sum-female-present">0</span></td>
-        <td class="p-2 sm:p-4 text-center text-emerald-500"><span id="sum-present">0</span></td>
-        <td class="p-2 sm:p-4 text-center text-rose-500"><span id="sum-male-absent">0</span></td>
-        <td class="p-2 sm:p-4 text-center text-rose-500"><span id="sum-female-absent">0</span></td>
-        <td class="p-2 sm:p-4 text-center text-rose-500"><span id="sum-absent">0</span></td>
-        <td class="p-2 sm:p-4 text-right text-emerald-500" id="sum-percentage">0.00%</td>
+        <td class="py-2.5 px-2 text-center text-slate-900 dark:text-white font-black sticky left-0 bg-slate-100 dark:bg-slate-800 z-10 border-r border-slate-200 dark:border-slate-800 shadow-sm">รวม</td>
+        <td class="py-2.5 px-1 text-center"><span id="sum-male">0</span></td>
+        <td class="py-2.5 px-1 text-center"><span id="sum-female">0</span></td>
+        <td class="py-2.5 px-1 text-center"><span id="sum-total">0</span></td>
+        <td class="py-2.5 px-1 text-center text-blue-500 font-bold"><span id="sum-male-present">0</span></td>
+        <td class="py-2.5 px-1 text-center text-pink-500 font-bold"><span id="sum-female-present">0</span></td>
+        <td class="py-2.5 px-1 text-center text-emerald-500 font-bold"><span id="sum-present">0</span></td>
+        <td class="py-2.5 px-1 text-center text-rose-500 font-bold"><span id="sum-male-absent">0</span></td>
+        <td class="py-2.5 px-1 text-center text-rose-500 font-bold"><span id="sum-female-absent">0</span></td>
+        <td class="py-2.5 px-1 text-center text-rose-500 font-bold"><span id="sum-absent">0</span></td>
+        <td class="py-2.5 px-2 text-center text-emerald-500 font-bold" id="sum-percentage">0.00%</td>
     `;
     tbody.appendChild(totalTr);
 
@@ -648,8 +695,8 @@ function updatePieChart(present, absent, leave, late) {
                     legend: {
                         position: 'bottom',
                         labels: {
-                            font: { family: 'Noto Sans Thai', size: 12, weight: '500' },
-                            padding: 18,
+                            font: { family: 'Noto Sans Thai', size: 11, weight: '500' },
+                            padding: 10,
                             usePointStyle: true,
                             pointStyle: 'circle'
                         }
@@ -990,9 +1037,8 @@ function buildBatchPrintPageHTML(record) {
     const totalPercent = sumTotal > 0 ? ((sumPresent / sumTotal) * 100).toFixed(2) + "%" : "0.00%";
 
     return `
-        <div class="batch-print-page bg-white text-black p-0 mb-8" style="background: white !important; color: black !important; padding: 0 !important; margin: 0 !important;">
+        <div class="batch-print-page bg-white text-black mb-8" style="background: white !important; color: black !important; margin: 0 !important;">
             <div class="print-header-zone" style="display: block !important; text-align: center; margin-bottom: 15px; color: black;">
-                <img src="logo.png" alt="โลโก้โรงเรียนบ้านกาหยี" style="width: 70px; height: 70px; object-fit: contain; margin: 0 auto 6px auto; display: block;">
                 <h2 style="font-size: 20px !important; font-weight: bold !important; margin: 0;">สถิตินักเรียนประจำวัน โรงเรียนบ้านกาหยี</h2>
                 <p style="font-size: 15px !important; font-weight: bold !important; margin: 2px 0 0 0;">สำนักงานเขตพื้นที่การศึกษาประถมศึกษาปัตตานี เขต 1</p>
                 <p style="font-size: 15px !important; font-weight: bold !important; margin-top: 2px;">${thaiDateText}</p>
@@ -1000,23 +1046,23 @@ function buildBatchPrintPageHTML(record) {
 
             <table class="w-full text-left border-collapse" style="border: 1px solid #000 !important; border-collapse: collapse !important; width: 100% !important;">
                 <thead>
-                    <tr style="background-color: #fff; color: #000; font-weight: bold; font-size: 14px; border-bottom: 1px solid #000;">
-                        <th style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important; width: 70px;" rowspan="2">ชั้น</th>
-                        <th style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important;" colspan="3">จำนวนนักเรียนทั้งหมด</th>
-                        <th style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important;" colspan="3">จำนวนนักเรียนที่มาเรียนวันนี้</th>
-                        <th style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important;" colspan="3">จำนวนนักเรียนที่ขาดเรียนวันนี้</th>
-                        <th style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important; width: 480px;" rowspan="2">อบรมนักเรียน</th>
+                    <tr style="background-color: #fff; color: #000; font-weight: bold; font-size: 12.5px; border-bottom: 1px solid #000;">
+                        <th style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important; width: 55px;" rowspan="2">ชั้น</th>
+                        <th style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important; white-space: nowrap; font-size: 12.5px;" colspan="3">จำนวนนักเรียนทั้งหมด</th>
+                        <th style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important; white-space: nowrap; font-size: 12.5px;" colspan="3">จำนวนนักเรียนที่มาเรียนวันนี้</th>
+                        <th style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important; white-space: nowrap; font-size: 12.5px;" colspan="3">จำนวนนักเรียนที่ขาดเรียนวันนี้</th>
+                        <th style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important; width: 380px;" rowspan="2">อบรมนักเรียน</th>
                     </tr>
                     <tr style="background-color: #fff; color: #000; font-weight: bold; font-size: 14px; border-bottom: 1px solid #000;">
-                        <th style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important; width: 45px;">ชาย</th>
-                        <th style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important; width: 45px;">หญิง</th>
-                        <th style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important; width: 45px;">รวม</th>
-                        <th style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important; width: 45px;">ชาย</th>
-                        <th style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important; width: 45px;">หญิง</th>
-                        <th style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important; width: 45px;">รวม</th>
-                        <th style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important; width: 45px;">ชาย</th>
-                        <th style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important; width: 45px;">หญิง</th>
-                        <th style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important; width: 45px;">รวม</th>
+                        <th style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important; width: 52px;">ชาย</th>
+                        <th style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important; width: 52px;">หญิง</th>
+                        <th style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important; width: 52px;">รวม</th>
+                        <th style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important; width: 52px;">ชาย</th>
+                        <th style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important; width: 52px;">หญิง</th>
+                        <th style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important; width: 52px;">รวม</th>
+                        <th style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important; width: 52px;">ชาย</th>
+                        <th style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important; width: 52px;">หญิง</th>
+                        <th style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important; width: 52px;">รวม</th>
                     </tr>
                 </thead>
                 <tbody style="font-size: 14px; color: #000;">
@@ -1049,13 +1095,13 @@ function buildBatchPrintPageHTML(record) {
             </table>
 
             <div class="print-signatures-zone" style="display: block !important; margin-top: 30px !important; width: 100% !important;">
-                <div style="margin-top: 25px; display: grid; grid-template-columns: 1.15fr 1fr; gap: 20px; width: 100%; font-size: 14px; color: black;">
-                    <div style="display: flex; flex-direction: column; gap: 25px; justify-content: center;">
+                <div style="display: flex !important; justify-content: space-between !important; width: 100% !important; font-size: 14px !important; color: black !important;">
+                    <div style="width: 48% !important; display: flex !important; flex-direction: column !important; gap: 20px !important; text-align: left !important;">
                         <div>ลงชื่อ............................................................ครูเวร</div>
                         <div>ลงชื่อ............................................................ครูเวร</div>
                         <div>ลงชื่อ............................................................ครูเวร</div>
                     </div>
-                    <div style="display: flex; flex-direction: column; justify-content: flex-start; gap: 12px; align-items: flex-start; padding-left: 20px;">
+                    <div style="width: 48% !important; display: flex !important; flex-direction: column !important; gap: 15px !important; align-items: flex-start !important; padding-left: 30px !important;">
                         <div>ลงชื่อ............................................................ผู้บริหาร</div>
                         <div style="font-weight: bold; margin-top: 0px;">วันที่............เดือน.........................................พ.ศ................</div>
                     </div>
@@ -1087,7 +1133,6 @@ function printBatchReportPDF() {
     }
 
     closeBatchPrintModal();
-    alert("🔍 ระบบกำลังประมวลผลจัดหน้าพิมพ์รายงานแบบต่อเนื่อง กรุณารอสักครู่ครับ...");
 
     db.collection("attendance")
         .where("date", ">=", start)
@@ -1143,7 +1188,7 @@ function printBatchReportPDF() {
             virtualDeck.innerHTML = batchHTML;
             document.title = `รายงานสถิติการมาเรียน_ช่วงวันที่_${start}_ถึง_${end}`;
 
-            mainArea.style.display = 'none';
+            mainArea.classList.add('hidden');
             virtualDeck.classList.remove('hidden');
 
             window.print();
@@ -1151,9 +1196,9 @@ function printBatchReportPDF() {
             setTimeout(() => {
                 virtualDeck.classList.add('hidden');
                 virtualDeck.innerHTML = '';
-                mainArea.style.display = 'block';
+                mainArea.classList.remove('hidden');
                 document.title = "ระบบบันทึกสถิติการมาเรียน โรงเรียนบ้านกาหยี สพป.ปัตตานี 1";
-            }, 1000);
+            }, 500);
         })
         .catch((error) => {
             console.error("Batch Print Failure: ", error);
