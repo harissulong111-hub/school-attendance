@@ -7,6 +7,15 @@
     <script src="https://www.gstatic.com/firebasejs/10.8.0/firebase-firestore-compat.js"></script>
     
     <title>TV Dashboard - ระบบสถิติการมาเรียนโรงเรียนบ้านกาหยี</title>
+    <script>
+        (function() {
+            const _w = console.warn;
+            console.warn = function(...args) {
+                if (args[0] && typeof args[0] === 'string' && args[0].includes('cdn.tailwindcss.com')) return;
+                _w.apply(console, args);
+            };
+        })();
+    </script>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@500;700;800;900&family=Noto+Sans+Thai:wght@500;600;700;800;900&display=swap" rel="stylesheet">
@@ -132,7 +141,7 @@
         // 🟢 ฟังก์ชันระบบนาฬิกาดิจิทัล และอัปเดตวันที่อัตโนมัติแบบ Real-time
         function startDigitalClockAndDate() {
             const clockEl = document.getElementById('tv-digital-clock');
-            const dateEl = document.getElementById('tv-tv-thai-date');
+            const dateEl = document.getElementById('tv-thai-date');
             
             const days = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
             const months = ['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'];

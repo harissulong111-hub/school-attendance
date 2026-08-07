@@ -105,20 +105,20 @@ function renderTable() {
         tr.className = 'hover:bg-slate-50/50 dark:hover:bg-slate-700/30 transition-colors';
         
         tr.innerHTML = `
-            <td class="p-4 font-bold text-slate-700 dark:text-slate-200 text-center class-name-td">${cls}</td>
-            <td class="p-4 text-center"><input type="number" value="${defaultData.male}" readonly class="w-16 bg-transparent text-center outline-none font-medium text-slate-500 dark:text-slate-400 cursor-not-allowed male-input"></td>
-            <td class="p-4 text-center"><input type="number" value="${defaultData.female}" readonly class="w-16 bg-transparent text-center outline-none font-medium text-slate-500 dark:text-slate-400 cursor-not-allowed female-input"></td>
-            <td class="p-4 text-center"><input type="number" value="${totalDefault}" readonly class="w-16 bg-transparent text-center outline-none font-bold text-slate-500 dark:text-slate-400 cursor-not-allowed total-input"></td>
+            <td class="p-2 sm:p-4 font-bold text-slate-700 dark:text-slate-200 text-center class-name-td sticky left-0 bg-white dark:bg-slate-900 z-10 border-r border-slate-200 dark:border-slate-800 shadow-sm">${cls}</td>
+            <td class="p-2 sm:p-4 text-center"><input type="number" value="${defaultData.male}" readonly class="w-12 sm:w-16 bg-transparent text-center outline-none font-medium text-slate-500 dark:text-slate-400 cursor-not-allowed male-input"></td>
+            <td class="p-2 sm:p-4 text-center"><input type="number" value="${defaultData.female}" readonly class="w-12 sm:w-16 bg-transparent text-center outline-none font-medium text-slate-500 dark:text-slate-400 cursor-not-allowed female-input"></td>
+            <td class="p-2 sm:p-4 text-center"><input type="number" value="${totalDefault}" readonly class="w-12 sm:w-16 bg-transparent text-center outline-none font-bold text-slate-500 dark:text-slate-400 cursor-not-allowed total-input"></td>
             
-            <td class="p-4 text-center"><input type="number" value="" placeholder="-" class="w-16 bg-blue-500/10 text-blue-500 border border-blue-500/30 rounded text-center font-bold male-present-input"></td>
-            <td class="p-4 text-center"><input type="number" value="" placeholder="-" class="w-16 bg-pink-500/10 text-pink-500 border border-pink-500/30 rounded text-center font-bold female-present-input"></td>
-            <td class="p-4 text-center"><input type="number" value="" placeholder="0" readonly class="w-16 bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 rounded text-center font-bold present-input cursor-not-allowed"></td>
+            <td class="p-2 sm:p-4 text-center"><input type="number" value="" placeholder="-" class="w-14 sm:w-16 py-1 bg-blue-500/10 text-blue-500 border border-blue-500/30 rounded text-center font-bold male-present-input"></td>
+            <td class="p-2 sm:p-4 text-center"><input type="number" value="" placeholder="-" class="w-14 sm:w-16 py-1 bg-pink-500/10 text-pink-500 border border-pink-500/30 rounded text-center font-bold female-present-input"></td>
+            <td class="p-2 sm:p-4 text-center"><input type="number" value="" placeholder="0" readonly class="w-14 sm:w-16 py-1 bg-emerald-500/10 text-emerald-500 border border-emerald-500/30 rounded text-center font-bold present-input cursor-not-allowed"></td>
             
-            <td class="p-4 text-center"><input type="number" value="0" readonly class="w-16 bg-rose-500/10 text-rose-500 border border-rose-500/30 rounded text-center font-bold male-absent-input cursor-not-allowed"></td>
-            <td class="p-4 text-center"><input type="number" value="0" readonly class="w-16 bg-rose-500/10 text-rose-500 border border-rose-500/30 rounded text-center font-bold female-absent-input cursor-not-allowed"></td>
-            <td class="p-4 text-center"><input type="number" value="0" readonly class="w-16 bg-rose-500/10 text-rose-500 border border-rose-500/30 rounded text-center font-bold absent-input cursor-not-allowed"></td>
+            <td class="p-2 sm:p-4 text-center"><input type="number" value="0" readonly class="w-12 sm:w-16 py-1 bg-rose-500/10 text-rose-500 border border-rose-500/30 rounded text-center font-bold male-absent-input cursor-not-allowed"></td>
+            <td class="p-2 sm:p-4 text-center"><input type="number" value="0" readonly class="w-12 sm:w-16 py-1 bg-rose-500/10 text-rose-500 border border-rose-500/30 rounded text-center font-bold female-absent-input cursor-not-allowed"></td>
+            <td class="p-2 sm:p-4 text-center"><input type="number" value="0" readonly class="w-12 sm:w-16 py-1 bg-rose-500/10 text-rose-500 border border-rose-500/30 rounded text-center font-bold absent-input cursor-not-allowed"></td>
             
-            <td class="p-4 text-right font-bold text-emerald-500 class-percentage">0.00%</td>
+            <td class="p-2 sm:p-4 text-right font-bold text-emerald-500 class-percentage">0.00%</td>
         `;
         tbody.appendChild(tr);
     });
@@ -128,32 +128,53 @@ function renderTable() {
     totalTr.id = 'web-total-row';
     totalTr.className = 'bg-slate-100/60 dark:bg-slate-800/60 font-bold';
     totalTr.innerHTML = `
-        <td class="p-4 text-center text-slate-900 dark:text-white font-black">รวม</td>
-        <td class="p-4 text-center"><span id="sum-male">0</span></td>
-        <td class="p-4 text-center"><span id="sum-female">0</span></td>
-        <td class="p-4 text-center"><span id="sum-total">0</span></td>
-        <td class="p-4 text-center text-blue-500"><span id="sum-male-present">0</span></td>
-        <td class="p-4 text-center text-pink-500"><span id="sum-female-present">0</span></td>
-        <td class="p-4 text-center text-emerald-500"><span id="sum-present">0</span></td>
-        <td class="p-4 text-center text-rose-500"><span id="sum-male-absent">0</span></td>
-        <td class="p-4 text-center text-rose-500"><span id="sum-female-absent">0</span></td>
-        <td class="p-4 text-center text-rose-500"><span id="sum-absent">0</span></td>
-        <td class="p-4 text-right text-emerald-500" id="sum-percentage">0.00%</td>
+        <td class="p-2 sm:p-4 text-center text-slate-900 dark:text-white font-black sticky left-0 bg-slate-100 dark:bg-slate-800 z-10 border-r border-slate-200 dark:border-slate-800 shadow-sm">รวม</td>
+        <td class="p-2 sm:p-4 text-center"><span id="sum-male">0</span></td>
+        <td class="p-2 sm:p-4 text-center"><span id="sum-female">0</span></td>
+        <td class="p-2 sm:p-4 text-center"><span id="sum-total">0</span></td>
+        <td class="p-2 sm:p-4 text-center text-blue-500"><span id="sum-male-present">0</span></td>
+        <td class="p-2 sm:p-4 text-center text-pink-500"><span id="sum-female-present">0</span></td>
+        <td class="p-2 sm:p-4 text-center text-emerald-500"><span id="sum-present">0</span></td>
+        <td class="p-2 sm:p-4 text-center text-rose-500"><span id="sum-male-absent">0</span></td>
+        <td class="p-2 sm:p-4 text-center text-rose-500"><span id="sum-female-absent">0</span></td>
+        <td class="p-2 sm:p-4 text-center text-rose-500"><span id="sum-absent">0</span></td>
+        <td class="p-2 sm:p-4 text-right text-emerald-500" id="sum-percentage">0.00%</td>
     `;
     tbody.appendChild(totalTr);
 
     document.querySelectorAll('#table-body input').forEach(input => {
         input.addEventListener('input', (e) => {
             const row = e.target.closest('tr');
+            if (!row || row.id === 'web-total-row' || row.id === 'print-extra-row') return;
+
             const male = parseInt(row.querySelector('.male-input').value) || 0;
             const female = parseInt(row.querySelector('.female-input').value) || 0;
 
-            const malePresentInput = row.querySelector('.male-present-input').value;
-            const femalePresentInput = row.querySelector('.female-present-input').value;
+            const malePresentEl = row.querySelector('.male-present-input');
+            const femalePresentEl = row.querySelector('.female-present-input');
 
-            const malePresent = malePresentInput !== "" ? parseInt(malePresentInput) || 0 : null;
-            const femalePresent = femalePresentInput !== "" ? parseInt(femalePresentInput) || 0 : null;
-            
+            let malePresentVal = malePresentEl.value;
+            let femalePresentVal = femalePresentEl.value;
+
+            if (malePresentVal !== "") {
+                let mVal = parseInt(malePresentVal);
+                if (isNaN(mVal) || mVal < 0) mVal = 0;
+                if (mVal > male) mVal = male;
+                malePresentEl.value = mVal;
+                malePresentVal = mVal;
+            }
+
+            if (femalePresentVal !== "") {
+                let fVal = parseInt(femalePresentVal);
+                if (isNaN(fVal) || fVal < 0) fVal = 0;
+                if (fVal > female) fVal = female;
+                femalePresentEl.value = fVal;
+                femalePresentVal = fVal;
+            }
+
+            const malePresent = malePresentVal !== "" ? parseInt(malePresentVal) : null;
+            const femalePresent = femalePresentVal !== "" ? parseInt(femalePresentVal) : null;
+
             if (malePresent !== null) {
                 let mAbsent = male - malePresent;
                 row.querySelector('.male-absent-input').value = mAbsent < 0 ? 0 : mAbsent;
@@ -395,7 +416,28 @@ function saveAttendanceData() {
 
 function toggleDarkMode() {
     const isDark = document.documentElement.classList.toggle('dark');
-    document.getElementById('theme-icon').className = isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+    const icon1 = document.getElementById('theme-icon');
+    const icon2 = document.getElementById('theme-icon-mobile');
+    const iconClass = isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+    if (icon1) icon1.className = iconClass;
+    if (icon2) icon2.className = iconClass;
+}
+
+function scrollToSection(id) {
+    const el = document.getElementById(id);
+    if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+}
+
+function openMobileToolsModal() {
+    const modal = document.getElementById('mobile-tools-modal');
+    if (modal) modal.classList.remove('hidden');
+}
+
+function closeMobileToolsModal() {
+    const modal = document.getElementById('mobile-tools-modal');
+    if (modal) modal.classList.add('hidden');
 }
 
 // =========================================================
@@ -435,8 +477,8 @@ function loadAttendanceData() {
                         row.querySelector('.male-present-input').value = mPresent;
                         row.querySelector('.female-present-input').value = fPresent;
                         
-                        row.querySelector('.male-absent-input').value = mPresent !== "" ? (mTotal - parseInt(mPresent) || 0) : 0;
-                        row.querySelector('.female-absent-input').value = fPresent !== "" ? (fTotal - parseInt(fPresent) || 0) : 0;
+                        row.querySelector('.male-absent-input').value = mPresent !== "" ? Math.max(0, mTotal - (parseInt(mPresent) || 0)) : 0;
+                        row.querySelector('.female-absent-input').value = fPresent !== "" ? Math.max(0, fTotal - (parseInt(fPresent) || 0)) : 0;
                         
                         row.querySelector('.present-input').value = classData.present;
                         row.querySelector('.absent-input').value = classData.absent;
@@ -589,17 +631,17 @@ function exportMonthlyReportToExcel() {
                     </tr>
             `;
 
-            let grandTotalStudentsSum = 0;
-            let grandPresentAvgSum = 0;
-            let grandAbsentAvgSum = 0;
+            let totalStudentsAccum = 0;
+            let grandPresentSum = 0;
+            let grandAbsentSum = 0;
             let totalDaysCount = monthlyRecords.length;
 
             monthlyRecords.forEach((record) => {
                 const sum = record.summary || { totalStudents: 0, present: 0, absent: 0, percentage: 0 };
                 
-                grandTotalStudentsSum = sum.totalStudents; 
-                grandPresentAvgSum += sum.present;
-                grandAbsentAvgSum += sum.absent;
+                totalStudentsAccum += sum.totalStudents; 
+                grandPresentSum += sum.present;
+                grandAbsentSum += sum.absent;
 
                 excelTemplate += `
                     <tr>
@@ -613,16 +655,17 @@ function exportMonthlyReportToExcel() {
                 `;
             });
 
-            grandPresentAvgSum = grandPresentAvgSum / totalDaysCount;
-            grandAbsentAvgSum = grandAbsentAvgSum / totalDaysCount;
-            const totalPercentage = grandTotalStudentsSum > 0 ? ((grandPresentAvgSum / grandTotalStudentsSum) * 100).toFixed(2) : "0.00";
+            const avgTotalStudents = totalDaysCount > 0 ? (totalStudentsAccum / totalDaysCount).toFixed(1) : 0;
+            const avgPresent = totalDaysCount > 0 ? (grandPresentSum / totalDaysCount).toFixed(1) : 0;
+            const avgAbsent = totalDaysCount > 0 ? (grandAbsentSum / totalDaysCount).toFixed(1) : 0;
+            const totalPercentage = totalStudentsAccum > 0 ? ((grandPresentSum / totalStudentsAccum) * 100).toFixed(2) : "0.00";
 
             excelTemplate += `
                     <tr class="sub-total">
                         <td>ค่าเฉลี่ยประจำเดือน</td>
-                        <td>${grandTotalStudentsSum} คน (นร.ทั้งหมด)</td>
-                        <td>${grandPresentAvgSum.toFixed(1)}</td>
-                        <td>${grandAbsentAvgSum.toFixed(1)}</td>
+                        <td>${avgTotalStudents} คน/วัน (เฉลี่ย)</td>
+                        <td>${avgPresent}</td>
+                        <td>${avgAbsent}</td>
                         <td style="color: #059669;">${totalPercentage}%</td>
                         <td>สรุปข้อมูลจากคลาวด์รวม ${totalDaysCount} วันทำการ</td>
                     </tr>
@@ -742,10 +785,201 @@ function loadStudentMasterDataFromServer() {
         });
 }
 
+function openBatchPrintModal() {
+    const modal = document.getElementById('batch-print-modal');
+    if (!modal) return;
+    const today = new Date().toISOString().split('T')[0];
+    const startDateInput = document.getElementById('print-start-date');
+    const endDateInput = document.getElementById('print-end-date');
+    if (startDateInput && !startDateInput.value) startDateInput.value = today;
+    if (endDateInput && !endDateInput.value) endDateInput.value = today;
+    modal.classList.remove('hidden');
+}
+
+function closeBatchPrintModal() {
+    const modal = document.getElementById('batch-print-modal');
+    if (modal) modal.classList.add('hidden');
+}
+
+function getThaiDateHeaderString(dateValue) {
+    if (!dateValue) return "วัน.......................ที่..............เดือน.........................................พ.ศ................";
+    const parts = dateValue.split('-');
+    if (parts.length === 3) {
+        const year = parseInt(parts[0]);
+        const month = parseInt(parts[1]) - 1;
+        const day = parseInt(parts[2]);
+        const localDate = new Date(year, month, day);
+        const daysName = ['อาทิตย์', 'จันทร์', 'อังคาร', 'พุธ', 'พฤหัสบดี', 'ศุกร์', 'เสาร์'];
+        const thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
+        const txtDay = daysName[localDate.getDay()];
+        const txtMonth = thaiMonths[month];
+        const txtYear = year + 543;
+        return `วัน ${txtDay} ที่ ${day} เดือน ${txtMonth} พ.ศ. ${txtYear}`;
+    }
+    return "";
+}
+
+function buildBatchPrintPageHTML(record) {
+    const dateStr = record.date;
+    const thaiDateText = getThaiDateHeaderString(dateStr);
+    const dailyNote = record.dailyNote || '';
+
+    let sumMale = 0, sumFemale = 0, sumTotal = 0;
+    let sumMalePresent = 0, sumFemalePresent = 0, sumPresent = 0;
+    let sumMaleAbsent = 0, sumFemaleAbsent = 0, sumAbsent = 0;
+
+    let classRowsHTML = '';
+
+    classesList.forEach((cls, index) => {
+        const classData = record.classes ? record.classes[cls] : null;
+        const defaultData = defaultStudentsData[cls] || { male: 0, female: 0 };
+
+        const male = classData ? (parseInt(classData.male) || 0) : defaultData.male;
+        const female = classData ? (parseInt(classData.female) || 0) : defaultData.female;
+        const total = male + female;
+
+        const malePresentRaw = classData && classData.malePresent !== undefined ? classData.malePresent : "";
+        const femalePresentRaw = classData && classData.femalePresent !== undefined ? classData.femalePresent : "";
+
+        const malePresent = malePresentRaw !== "" ? parseInt(malePresentRaw) || 0 : "";
+        const femalePresent = femalePresentRaw !== "" ? parseInt(femalePresentRaw) || 0 : "";
+
+        const present = classData && classData.present !== undefined ? (parseInt(classData.present) || 0) : ((malePresent !== "" || femalePresent !== "") ? ((parseInt(malePresent) || 0) + (parseInt(femalePresent) || 0)) : "");
+        const maleAbsent = classData && malePresent !== "" ? Math.max(0, male - (parseInt(malePresent) || 0)) : 0;
+        const femaleAbsent = classData && femalePresent !== "" ? Math.max(0, female - (parseInt(femalePresent) || 0)) : 0;
+        const absent = classData && classData.absent !== undefined ? (parseInt(classData.absent) || 0) : (maleAbsent + femaleAbsent);
+
+        sumMale += male;
+        sumFemale += female;
+        sumTotal += total;
+        sumMalePresent += (parseInt(malePresent) || 0);
+        sumFemalePresent += (parseInt(femalePresent) || 0);
+        sumPresent += (parseInt(present) || 0);
+        sumMaleAbsent += maleAbsent;
+        sumFemaleAbsent += femaleAbsent;
+        sumAbsent += absent;
+
+        let extraTd = '';
+        if (index === 0) {
+            extraTd = `<td class="print-training-cell" rowspan="10" style="display: table-cell !important; text-align: left !important; vertical-align: top !important; padding: 8px 10px !important; font-size: 14px !important; line-height: 2.1 !important; color: #000 !important; border: 1px solid #000 !important;">
+                ........................................................................................................................<br>
+                ........................................................................................................................<br>
+                ........................................................................................................................<br>
+                ........................................................................................................................<br>
+                ........................................................................................................................<br>
+                ........................................................................................................................<br>
+                ........................................................................................................................<br>
+                ........................................................................................................................<br>
+                ........................................................................................................................<br>
+                ........................................................................................................................
+            </td>`;
+        }
+
+        classRowsHTML += `
+            <tr>
+                <td style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important; font-weight: bold;">${cls}</td>
+                <td style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important;">${male}</td>
+                <td style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important;">${female}</td>
+                <td style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important; font-weight: bold;">${total}</td>
+                <td style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important;">${malePresent !== "" ? malePresent : "-"}</td>
+                <td style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important;">${femalePresent !== "" ? femalePresent : "-"}</td>
+                <td style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important; font-weight: bold;">${present !== "" ? present : "0"}</td>
+                <td style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important;">${maleAbsent}</td>
+                <td style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important;">${femaleAbsent}</td>
+                <td style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important; font-weight: bold;">${absent}</td>
+                ${extraTd}
+            </tr>
+        `;
+    });
+
+    const totalPercent = sumTotal > 0 ? ((sumPresent / sumTotal) * 100).toFixed(2) + "%" : "0.00%";
+
+    return `
+        <div class="batch-print-page bg-white text-black p-0 mb-8" style="background: white !important; color: black !important; padding: 0 !important; margin: 0 !important;">
+            <div class="print-header-zone" style="display: block !important; text-align: center; margin-bottom: 15px; color: black;">
+                <h2 style="font-size: 20px !important; font-weight: bold !important; margin: 0;">สถิตินักเรียนประจำวัน โรงเรียนบ้านกาหยี</h2>
+                <p style="font-size: 15px !important; font-weight: bold !important; margin: 2px 0 0 0;">สำนักงานเขตพื้นที่การศึกษาประถมศึกษาปัตตานี เขต 1</p>
+                <p style="font-size: 15px !important; font-weight: bold !important; margin-top: 2px;">${thaiDateText}</p>
+            </div>
+
+            <table class="w-full text-left border-collapse" style="border: 1px solid #000 !important; border-collapse: collapse !important; width: 100% !important;">
+                <thead>
+                    <tr style="background-color: #fff; color: #000; font-weight: bold; font-size: 14px; border-bottom: 1px solid #000;">
+                        <th style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important; width: 70px;" rowspan="2">ชั้น</th>
+                        <th style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important;" colspan="3">จำนวนนักเรียนทั้งหมด</th>
+                        <th style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important;" colspan="3">จำนวนนักเรียนที่มาเรียนวันนี้</th>
+                        <th style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important;" colspan="3">จำนวนนักเรียนที่ขาดเรียนวันนี้</th>
+                        <th style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important; width: 480px;" rowspan="2">อบรมนักเรียน</th>
+                    </tr>
+                    <tr style="background-color: #fff; color: #000; font-weight: bold; font-size: 14px; border-bottom: 1px solid #000;">
+                        <th style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important; width: 45px;">ชาย</th>
+                        <th style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important; width: 45px;">หญิง</th>
+                        <th style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important; width: 45px;">รวม</th>
+                        <th style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important; width: 45px;">ชาย</th>
+                        <th style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important; width: 45px;">หญิง</th>
+                        <th style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important; width: 45px;">รวม</th>
+                        <th style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important; width: 45px;">ชาย</th>
+                        <th style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important; width: 45px;">หญิง</th>
+                        <th style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important; width: 45px;">รวม</th>
+                    </tr>
+                </thead>
+                <tbody style="font-size: 14px; color: #000;">
+                    ${classRowsHTML}
+                    <tr style="font-weight: bold;">
+                        <td style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important; font-weight: bold;">รวม</td>
+                        <td style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important;">${sumMale}</td>
+                        <td style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important;">${sumFemale}</td>
+                        <td style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important;">${sumTotal}</td>
+                        <td style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important;">${sumMalePresent}</td>
+                        <td style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important;">${sumFemalePresent}</td>
+                        <td style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important;">${sumPresent}</td>
+                        <td style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important;">${sumMaleAbsent}</td>
+                        <td style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important;">${sumFemaleAbsent}</td>
+                        <td style="border: 1px solid #000 !important; padding: 4px 2px !important; text-align: center !important;">${sumAbsent}</td>
+                    </tr>
+                    <tr>
+                        <td style="border: 1px solid #000 !important; padding: 4px 2px !important; font-weight: bold; text-align: left;" colspan="4">ร้อยละของนักเรียนที่มาเรียน</td>
+                        <td style="border: 1px solid #000 !important; padding: 4px 2px !important;"></td>
+                        <td style="border: 1px solid #000 !important; padding: 4px 2px !important;"></td>
+                        <td style="border: 1px solid #000 !important; padding: 4px 2px !important; font-weight: bold; text-align: center;">${totalPercent}</td>
+                        <td style="border: 1px solid #000 !important; padding: 4px 2px !important;"></td>
+                        <td style="border: 1px solid #000 !important; padding: 4px 2px !important;"></td>
+                        <td style="border: 1px solid #000 !important; padding: 4px 2px !important;"></td>
+                        <td style="border: 1px solid #000 !important; padding: 8px 10px !important; text-align: left !important; vertical-align: middle !important; font-size: 14px !important; line-height: 1.5 !important;">
+                            <strong>หมายเหตุ</strong> <span style="font-weight: bold; color: black !important;">${dailyNote}</span>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="print-signatures-zone" style="display: block !important; margin-top: 30px !important; width: 100% !important;">
+                <div style="margin-top: 25px; display: grid; grid-template-columns: 1.15fr 1fr; gap: 20px; width: 100%; font-size: 14px; color: black;">
+                    <div style="display: flex; flex-direction: column; gap: 25px; justify-content: center;">
+                        <div>ลงชื่อ............................................................ครูเวร</div>
+                        <div>ลงชื่อ............................................................ครูเวร</div>
+                        <div>ลงชื่อ............................................................ครูเวร</div>
+                    </div>
+                    <div style="display: flex; flex-direction: column; justify-content: flex-start; gap: 12px; align-items: flex-start; padding-left: 20px;">
+                        <div>ลงชื่อ............................................................ผู้บริหาร</div>
+                        <div style="font-weight: bold; margin-top: 0px;">วันที่............เดือน.........................................พ.ศ................</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    `;
+}
+
 function printBatchReportPDF() {
-    const start = document.getElementById('print-start-date').value;
-    const end = document.getElementById('print-end-date').value;
-    const originalDate = document.getElementById('record-date').value; 
+    const startDateInput = document.getElementById('print-start-date');
+    const endDateInput = document.getElementById('print-end-date');
+    
+    if (!startDateInput || !endDateInput) {
+        alert("❌ ไม่พบแบบฟอร์มเลือกช่วงวันที่สำหรับการพิมพ์รายงาน");
+        return;
+    }
+
+    const start = startDateInput.value;
+    const end = endDateInput.value;
 
     if (!start || !end) {
         alert("❌ กรุณาระบุเลือกช่วงวันที่เริ่มต้นและสิ้นสุดที่ต้องการพิมพ์รายงานให้ครบถ้วนก่อนครับ");
@@ -756,6 +990,7 @@ function printBatchReportPDF() {
         return;
     }
 
+    closeBatchPrintModal();
     alert("🔍 ระบบกำลังประมวลผลจัดหน้าพิมพ์รายงานแบบต่อเนื่อง กรุณารอสักครู่ครับ...");
 
     db.collection("attendance")
@@ -774,61 +1009,19 @@ function printBatchReportPDF() {
 
             const virtualDeck = document.getElementById('batch-print-virtual-deck');
             const mainArea = document.getElementById('main-render-area');
-            virtualDeck.innerHTML = ''; 
 
-            for (let i = 0; i < records.length; i++) {
-                const data = records[i];
-                
-                document.getElementById('record-date').value = data.date;
-                updateThaiDateDisplay(data.date);
-                if (document.getElementById('daily-note')) {
-                    document.getElementById('daily-note').value = data.dailyNote || '';
-                }
-
-                classesList.forEach(cls => {
-                    const classData = data.classes ? data.classes[cls] : null;
-                    const rows = document.querySelectorAll('#table-body tr');
-                    rows.forEach(row => {
-                        if (row.id === 'web-total-row' || row.id === 'print-extra-row') return;
-                        const currentClassName = row.querySelector('.class-name-td').innerText;
-                        if (currentClassName === cls) {
-                            if (classData) {
-                                row.querySelector('.male-input').value = classData.male;
-                                row.querySelector('.female-input').value = classData.female;
-                                
-                                const mTotal = parseInt(classData.male) || 0;
-                                const fTotal = parseInt(classData.female) || 0;
-                                row.querySelector('.total-input').value = mTotal + fTotal;
-                                
-                                const mPresent = (classData.malePresent !== undefined) ? classData.malePresent : "";
-                                const fPresent = (classData.femalePresent !== undefined) ? classData.femalePresent : "";
-                                
-                                row.querySelector('.male-present-input').value = mPresent;
-                                row.querySelector('.female-present-input').value = fPresent;
-                                
-                                row.querySelector('.male-absent-input').value = mPresent !== "" ? (mTotal - parseInt(mPresent) || 0) : 0;
-                                row.querySelector('.female-absent-input').value = fPresent !== "" ? (fTotal - parseInt(fPresent) || 0) : 0;
-
-                                row.querySelector('.present-input').value = classData.present;
-                                row.querySelector('.absent-input').value = classData.absent;
-                            }
-                        }
-                    });
-                });
-                
-                updateCalculations();
-
-                const clonePage = mainArea.cloneNode(true);
-                clonePage.className = "batch-print-page";
-                
-                const originalInputs = mainArea.querySelectorAll('input');
-                const clonedInputs = clonePage.querySelectorAll('input');
-                originalInputs.forEach((input, index) => {
-                    clonedInputs[index].value = input.value;
-                });
-
-                virtualDeck.appendChild(clonePage);
+            if (!virtualDeck || !mainArea) {
+                alert("❌ โครงสร้างหน้าเว็บไม่รองรับการพิมพ์แบบต่อเนื่อง");
+                return;
             }
+
+            let batchHTML = '';
+            records.forEach(record => {
+                batchHTML += buildBatchPrintPageHTML(record);
+            });
+
+            virtualDeck.innerHTML = batchHTML;
+            document.title = `รายงานสถิติการมาเรียน_ช่วงวันที่_${start}_ถึง_${end}`;
 
             mainArea.style.display = 'none';
             virtualDeck.classList.remove('hidden');
@@ -839,10 +1032,7 @@ function printBatchReportPDF() {
                 virtualDeck.classList.add('hidden');
                 virtualDeck.innerHTML = '';
                 mainArea.style.display = 'block';
-                
-                document.getElementById('record-date').value = originalDate;
-                updateThaiDateDisplay(originalDate);
-                loadAttendanceData();
+                document.title = "ระบบบันทึกสถิติการมาเรียน โรงเรียนบ้านกาหยี สพป.ปัตตานี 1";
             }, 1000);
         })
         .catch((error) => {
