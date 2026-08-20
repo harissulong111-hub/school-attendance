@@ -532,7 +532,7 @@ function saveAttendanceData() {
             if (targetDate === systemTodayStr) {
                 alert(`🎉 สำเร็จ! บันทึกข้อมูลของวันที่ ${targetDate} โดยครูผู้ดูแล (${currentUserEmail}) เข้าสู่คลาวด์แล้ว\n🚀 ระบบกำลังส่งรายงานเข้า LINE Bot อัตโนมัติ...`);
                 
-                const scriptUrl = "https://script.google.com/macros/s/AKfycbz3ZO2EYhEH8RzSxm_o5jL0lZcXQD-qM2Hm8kxBK_gHqTm4dQD_jynumuHs7YZ0H1F__w/exec";
+                const scriptUrl = "https://script.google.com/macros/s/AKfycbzXyi2IWqgS5HwvsSKsPgcdrgAWD5N6i-1bjnt9cMP6IUX7EFteRTE47_RWmKuMgvv8Dg/exec";
                 
                 return fetch(scriptUrl, {
                     method: 'POST',
